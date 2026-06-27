@@ -2874,13 +2874,24 @@ function renderWrongList() {
     return;
   }
 
+  // Count wrong by type
+  const wrongTypes = {};
+  wrongQs.forEach(q => { const t = q.type === 'multichoice' ? 'choice' : q.type; wrongTypes[t] = (wrongTypes[t] || 0) + 1; });
+
   let html = `
     <div class="card">
       <button class="back-btn" onclick="goHome()">← 返回首页</button>
       <h3 style="margin-top:16px;color:#1a3a5c;">📋 错题集（${wrongQs.length} 题）</h3>
-      <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap;">
-        <button class="nav-btn primary" onclick="startWrongPractice()">逐题重做</button>
-        <button class="nav-btn danger" onclick="confirmClearWrongs()">清空错题</button>
+      <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+        <span style="font-size:0.8em;color:#999;">全部重做：</span>
+        <button class="nav-btn primary" onclick="startWrongPractice()" style="font-size:0.8em;padding:6px 14px;">全部(${wrongQs.length})</button>
+        <span style="font-size:0.8em;color:#999;margin-left:4px;">按题型：</span>
+        ${wrongTypes['judge'] ? `<button class="nav-btn" onclick="startWrongByType('judge')" style="font-size:0.8em;padding:6px 14px;">判断(${wrongTypes['judge']})</button>` : ''}
+        ${(wrongTypes['choice'] || 0) > 0 ? `<button class="nav-btn" onclick="startWrongByType('choice')" style="font-size:0.8em;padding:6px 14px;">选择(${wrongTypes['choice'] || 0})</button>` : ''}
+        ${wrongTypes['term'] ? `<button class="nav-btn" onclick="startWrongByType('term')" style="font-size:0.8em;padding:6px 14px;">名词(${wrongTypes['term']})</button>` : ''}
+        ${wrongTypes['qa'] ? `<button class="nav-btn" onclick="startWrongByType('qa')" style="font-size:0.8em;padding:6px 14px;">问答(${wrongTypes['qa']})</button>` : ''}
+        ${(wrongTypes['calc'] || wrongTypes['case']) ? `<button class="nav-btn" onclick="startWrongByType('calcCase')" style="font-size:0.8em;padding:6px 14px;">计算/案例(${(wrongTypes['calc']||0)+(wrongTypes['case']||0)})</button>` : ''}
+        <button class="nav-btn danger" onclick="confirmClearWrongs()" style="font-size:0.8em;padding:6px 14px;">清空</button>
       </div>
     </div>
   `;
@@ -2921,6 +2932,38 @@ function startWrongPracticeAt(idx) {
   state.answered = {};
   state.userAnswers = {};
   renderWrongPractice(wrongQs);
+  window.scrollTo(0, 0);
+}
+
+// Start wrong practice filtered by type
+function startWrongByType(typeFilter) {
+  const filtered = [...wrongIds].map(id => getQuestionById(id))
+    .filter(q => q && (typeFilter === 'calcCase' ? (q.type === 'calc' || q.type === 'case') :
+                       typeFilter === 'choice' ? (q.type === 'choice' || q.type === 'multichoice') :
+                       q.type === typeFilter));
+  if (filtered.length === 0) { showToast('该题型暂无错题'); return; }
+  state.questions = filtered.map(q => q.id);
+  state.currentIndex = 0;
+  state.correctCount = 0;
+  state.answered = {};
+  state.userAnswers = {};
+  renderWrongPractice(filtered);
+  window.scrollTo(0, 0);
+}
+
+// Start favorites practice filtered by type
+function startFavByType(typeFilter) {
+  const filtered = [...favoriteIds].map(id => getQuestionById(id))
+    .filter(q => q && (typeFilter === 'calcCase' ? (q.type === 'calc' || q.type === 'case') :
+                       typeFilter === 'choice' ? (q.type === 'choice' || q.type === 'multichoice') :
+                       q.type === typeFilter));
+  if (filtered.length === 0) { showToast('该题型暂无收藏'); return; }
+  state.questions = filtered.map(q => q.id);
+  state.currentIndex = 0;
+  state.correctCount = 0;
+  state.answered = {};
+  state.userAnswers = {};
+  renderFavPractice(filtered);
   window.scrollTo(0, 0);
 }
 
@@ -3019,12 +3062,23 @@ function renderFavorites() {
     return;
   }
 
+  // Count fav by type
+  const favTypes = {};
+  favQs.forEach(q => { const t = q.type === 'multichoice' ? 'choice' : q.type; favTypes[t] = (favTypes[t] || 0) + 1; });
+
   let html = `
     <div class="card">
       <button class="back-btn" onclick="goHome()">← 返回首页</button>
       <h3 style="margin-top:16px;color:#1a3a5c;">⭐ 收藏题目（${favQs.length} 题）</h3>
-      <div style="margin-top:12px;">
-        <button class="nav-btn primary" onclick="startFavoritesPractice()">逐题复习</button>
+      <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+        <span style="font-size:0.8em;color:#999;">全部复习：</span>
+        <button class="nav-btn primary" onclick="startFavoritesPractice()" style="font-size:0.8em;padding:6px 14px;">全部(${favQs.length})</button>
+        <span style="font-size:0.8em;color:#999;margin-left:4px;">按题型：</span>
+        ${favTypes['judge'] ? `<button class="nav-btn" onclick="startFavByType('judge')" style="font-size:0.8em;padding:6px 14px;">判断(${favTypes['judge']})</button>` : ''}
+        ${(favTypes['choice'] || 0) > 0 ? `<button class="nav-btn" onclick="startFavByType('choice')" style="font-size:0.8em;padding:6px 14px;">选择(${favTypes['choice'] || 0})</button>` : ''}
+        ${favTypes['term'] ? `<button class="nav-btn" onclick="startFavByType('term')" style="font-size:0.8em;padding:6px 14px;">名词(${favTypes['term']})</button>` : ''}
+        ${favTypes['qa'] ? `<button class="nav-btn" onclick="startFavByType('qa')" style="font-size:0.8em;padding:6px 14px;">问答(${favTypes['qa']})</button>` : ''}
+        ${(favTypes['calc'] || favTypes['case']) ? `<button class="nav-btn" onclick="startFavByType('calcCase')" style="font-size:0.8em;padding:6px 14px;">计算/案例(${(favTypes['calc']||0)+(favTypes['case']||0)})</button>` : ''}
       </div>
     </div>
   `;
@@ -3277,11 +3331,20 @@ function renderQuestionBody(q, isAnswered) {
     `;
   }
   // Subjective questions: term, qa, calc, case
+  const qid = state.questions[state.currentIndex];
+  const isSelfAssessed = state.userAnswers[qid] === 'self-correct' || state.userAnswers[qid] === 'self-wrong';
   return `
-    <button class="show-answer-btn" id="showAnswerBtn" onclick="revealSubjectiveAnswer()">📖 显示答案</button>
-    <div class="answer-box" id="answerBox" style="margin-top:16px;">
+    <button class="show-answer-btn" id="showAnswerBtn" onclick="revealSubjectiveAnswer()" style="${isSelfAssessed ? 'display:none;' : ''}">📖 显示答案</button>
+    <div class="answer-box" id="answerBox" style="margin-top:16px;${state.answered[qid] === 'seen' || isSelfAssessed ? 'display:block;' : ''}">
       <div class="answer-label correct-label">参考答案：</div>
       <div class="answer-content">${escapeHtml(q.answer)}</div>
+      <div class="self-assess-btns" style="margin-top:14px;display:flex;gap:10px;${isSelfAssessed ? 'display:none;' : ''}">
+        <button class="judge-btn" id="selfCorrect" style="color:#52c41a;border-color:#b7eb8f;">✓ 我会了</button>
+        <button class="judge-btn" id="selfWrong" style="color:#ff4d4f;border-color:#ffa39e;">✗ 没掌握</button>
+      </div>
+      <div class="self-assess-result" id="selfResult" style="margin-top:10px;font-weight:600;${isSelfAssessed ? '' : 'display:none;'}">
+        ${state.userAnswers[qid] === 'self-correct' ? '<span style="color:#52c41a;">✓ 已掌握</span>' : state.userAnswers[qid] === 'self-wrong' ? '<span style="color:#ff4d4f;">✗ 未掌握</span>' : ''}
+      </div>
     </div>
   `;
 }
@@ -3514,18 +3577,57 @@ function revealSubjectiveAnswer() {
   const answerBox = document.getElementById('answerBox');
   const showBtn = document.getElementById('showAnswerBtn');
 
-  if (answerBox) {
-    answerBox.classList.add('show');
-  }
-  if (showBtn) {
-    showBtn.style.display = 'none';
-  }
+  if (answerBox) answerBox.style.display = 'block';
+  if (showBtn) showBtn.style.display = 'none';
 
   // Mark as seen
   const qid = state.questions[state.currentIndex];
   if (qid && state.answered[qid] === undefined) {
     state.answered[qid] = 'seen';
   }
+
+  // Setup self-assessment buttons
+  const selfCorrect = document.getElementById('selfCorrect');
+  const selfWrong = document.getElementById('selfWrong');
+  if (selfCorrect && selfWrong) {
+    selfCorrect.addEventListener('click', () => handleSelfAssess('self-correct'));
+    selfWrong.addEventListener('click', () => handleSelfAssess('self-wrong'));
+  }
+}
+
+function handleSelfAssess(result) {
+  const qid = state.questions[state.currentIndex];
+  if (!qid || state.userAnswers[qid]) return; // already assessed
+
+  state.userAnswers[qid] = result;
+  const isCorrect = result === 'self-correct';
+
+  if (isCorrect) {
+    state.correctCount++;
+    state.answered[qid] = true;
+    removeWrong(qid);
+  } else {
+    state.answered[qid] = false;
+    addWrong(qid);
+  }
+
+  // Update UI
+  const btns = document.querySelector('.self-assess-btns');
+  const resultDiv = document.getElementById('selfResult');
+  if (btns) btns.style.display = 'none';
+  if (resultDiv) {
+    resultDiv.style.display = 'block';
+    resultDiv.innerHTML = isCorrect ? '<span style="color:#52c41a;">✓ 已掌握</span>' : '<span style="color:#ff4d4f;">✗ 未掌握</span>';
+  }
+
+  // Update answer box border color
+  const answerBox = document.getElementById('answerBox');
+  if (answerBox) {
+    answerBox.style.borderColor = isCorrect ? '#b7eb8f' : '#ffa39e';
+    answerBox.style.background = isCorrect ? '#f6ffed' : '#fff2f0';
+  }
+
+  updateStatsDisplay();
 }
 
 function showAnswerResult(q) {
@@ -3632,9 +3734,23 @@ function showAnswerResult(q) {
   if (isSubjective(q.type)) {
     const answerBox = document.getElementById('answerBox');
     const showBtn = document.getElementById('showAnswerBtn');
-    if (state.answered[q.id] === 'seen') {
-      if (answerBox) answerBox.classList.add('show');
+    const assessBtns = document.querySelector('.self-assess-btns');
+    const resultDiv = document.getElementById('selfResult');
+
+    if (state.answered[q.id] === 'seen' || state.userAnswers[q.id]) {
+      if (answerBox) answerBox.style.display = 'block';
       if (showBtn) showBtn.style.display = 'none';
+      // Hide assessment buttons if already assessed
+      if (state.userAnswers[q.id] && assessBtns) assessBtns.style.display = 'none';
+      if (state.userAnswers[q.id] && resultDiv) {
+        resultDiv.style.display = 'block';
+        const isCorrect = state.userAnswers[q.id] === 'self-correct';
+        resultDiv.innerHTML = isCorrect ? '<span style="color:#52c41a;">✓ 已掌握</span>' : '<span style="color:#ff4d4f;">✗ 未掌握</span>';
+        if (answerBox) {
+          answerBox.style.borderColor = isCorrect ? '#b7eb8f' : '#ffa39e';
+          answerBox.style.background = isCorrect ? '#f6ffed' : '#fff2f0';
+        }
+      }
     }
   }
 }
@@ -3661,17 +3777,39 @@ function nextQuestion() {
   }
 }
 
+// Custom jump modal (works on mobile where prompt() may be blocked)
 function jumpToQuestion() {
-  const target = prompt(`请输入要跳转的题号（1-${state.questions.length}）：`);
-  if (target === null) return;
-  const num = parseInt(target);
-  if (isNaN(num) || num < 1 || num > state.questions.length) {
-    showToast('请输入有效的题号');
-    return;
+  const total = state.questions.length;
+  // Ensure modal styles exist
+  if (!document.getElementById('jump-modal-styles')) {
+    const style = document.createElement('style');
+    style.id = 'jump-modal-styles';
+    style.textContent = '.jump-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.4);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;}.jump-box{background:white;border-radius:14px;padding:24px;width:100%;max-width:320px;box-shadow:0 8px 32px rgba(0,0,0,0.2);}';
+    document.head.appendChild(style);
   }
-  state.currentIndex = num - 1;
-  render();
-  window.scrollTo(0, 0);
+
+  const overlay = document.createElement('div');
+  overlay.className = 'jump-overlay';
+  overlay.innerHTML = '<div class="jump-box" id="jumpBox"><h4 style="margin-bottom:10px;color:#1a3a5c;">跳转到题目</h4><input type="number" id="jumpInput" min="1" max="' + total + '" value="' + (state.currentIndex + 1) + '" style="width:100%;padding:10px;border:1px solid #d9d9d9;border-radius:8px;font-size:1em;text-align:center;"><p style="font-size:0.8em;color:#999;margin:6px 0;">输入题号 1 - ' + total + '</p><div style="display:flex;gap:8px;margin-top:12px;"><button class="nav-btn" id="jumpCancel" style="flex:1;">取消</button><button class="nav-btn primary" id="jumpConfirm" style="flex:1;">跳转</button></div></div>';
+  overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
+  document.body.appendChild(overlay);
+
+  var input = document.getElementById('jumpInput');
+  input.focus();
+  input.select();
+
+  var remove = function() { overlay.remove(); };
+  var doJump = function() {
+    var num = parseInt(input.value);
+    if (isNaN(num) || num < 1 || num > total) { showToast('请输入有效的题号'); return; }
+    state.currentIndex = num - 1;
+    remove();
+    render();
+    window.scrollTo(0, 0);
+  };
+  document.getElementById('jumpConfirm').addEventListener('click', doJump);
+  document.getElementById('jumpCancel').addEventListener('click', remove);
+  input.addEventListener('keydown', function(e) { if (e.key === 'Enter') doJump(); });
 }
 
 function confirmExit() {
