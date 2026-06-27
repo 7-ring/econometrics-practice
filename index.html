@@ -2607,45 +2607,123 @@ function saveState() {
 }
 
 // Save current practice progress (can be resumed later)
+// Determine a unique key for the current practice session
+function getProgressKey() {
+  if (state.mode === 'sequential') {
+    // Detect if this is a type-specific practice by checking first question
+    if (state.questions.length > 0 && state.questions.length < QUESTION_BANK.length) {
+      const firstQ = getQuestionById(state.questions[0]);
+      if (firstQ) {
+        // Check if all questions are same type (or merged types)
+        const allTerm = state.questions.every(id => { const q = getQuestionById(id); return q && q.type === 'term'; });
+        const allJudge = state.questions.every(id => { const q = getQuestionById(id); return q && q.type === 'judge'; });
+        const allChoice = state.questions.every(id => { const q = getQuestionById(id); return q && (q.type === 'choice' || q.type === 'multichoice'); });
+        const allQA = state.questions.every(id => { const q = getQuestionById(id); return q && q.type === 'qa'; });
+        const allCalcCase = state.questions.every(id => { const q = getQuestionById(id); return q && (q.type === 'calc' || q.type === 'case'); });
+        if (allTerm) return 'term';
+        if (allJudge) return 'judge';
+        if (allChoice) return 'choice';
+        if (allQA) return 'qa';
+        if (allCalcCase) return 'calcCase';
+      }
+    }
+    return 'sequential';
+  }
+  if (state.mode === 'random') return 'random';
+  if (state.mode === 'wrong') return 'wrong';
+  if (state.mode === 'favorites') return 'favorites';
+  return 'sequential';
+}
+
 function saveProgress() {
   if (state.questions.length === 0) return;
+  const key = getProgressKey();
   try {
-    localStorage.setItem(STORAGE_KEY + '_progress', JSON.stringify({
+    localStorage.setItem(STORAGE_KEY + '_progress_' + key, JSON.stringify({
+      key: key,
       mode: state.mode,
       questions: state.questions,
       currentIndex: state.currentIndex,
       correctCount: state.correctCount,
       answered: state.answered,
       userAnswers: state.userAnswers,
+      total: state.questions.length,
       savedAt: new Date().toISOString()
     }));
   } catch(e) { /* ignore */ }
 }
 
-// Load saved progress (returns null if none or expired)
-function loadProgress() {
+// Load saved progress for a specific key
+function loadProgress(key) {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY + '_progress');
+    const raw = localStorage.getItem(STORAGE_KEY + '_progress_' + key);
     if (!raw) return null;
     const data = JSON.parse(raw);
-    // Only valid if there are unanswered questions
     if (!data.questions || data.questions.length === 0) return null;
     if (data.currentIndex >= data.questions.length) return null;
     return data;
   } catch(e) { return null; }
 }
 
-// Clear saved progress
-function clearProgress() {
-  try { localStorage.removeItem(STORAGE_KEY + '_progress'); } catch(e) {}
+// Clear saved progress for a specific key (or all if no key given)
+function clearProgress(key) {
+  try {
+    if (key) {
+      localStorage.removeItem(STORAGE_KEY + '_progress_' + key);
+    } else {
+      // Clear all progress keys
+      const keys = ['sequential','random','term','judge','choice','qa','calcCase','wrong','favorites'];
+      keys.forEach(k => localStorage.removeItem(STORAGE_KEY + '_progress_' + k));
+    }
+  } catch(e) {}
 }
 
-// Resume saved progress
-function resumeProgress() {
-  const data = loadProgress();
+// Get all saved progress keys with basic info
+function getAllProgress() {
+  const keys = ['sequential','random','term','judge','choice','qa','calcCase','wrong','favorites'];
+  const results = [];
+  keys.forEach(k => {
+    const data = loadProgress(k);
+    if (data) {
+      results.push({
+        key: k,
+        currentIndex: data.currentIndex,
+        total: data.total,
+        answered: Object.values(data.answered || {}).filter(v => v !== undefined).length
+      });
+    }
+  });
+  return results;
+}
+
+// Show resume dialog for a specific practice type
+function maybeResumeOrStart(key, label, startFn) {
+  const data = loadProgress(key);
+  if (!data) { startFn(); return; }
+
+  // Build the modal
+  const overlay = document.createElement('div');
+  overlay.className = 'jump-overlay';
+  overlay.innerHTML = '<div class="jump-box" id="resumeBox"><h4 style="margin-bottom:8px;color:#1a3a5c;">' + label + '</h4><p style="font-size:0.9em;color:#666;margin-bottom:4px;">上次做到第 <strong>' + (data.currentIndex + 1) + '</strong> 题 / 共 ' + data.total + ' 题</p><p style="font-size:0.85em;color:#999;margin-bottom:14px;">已完成 ' + (Object.values(data.answered || {}).filter(v => v !== undefined).length) + ' 题，正确 ' + (data.correctCount || 0) + ' 题</p><div style="display:flex;gap:8px;"><button class="nav-btn primary" id="resumeContinue" style="flex:1;">继续上次</button><button class="nav-btn" id="resumeRestart" style="flex:1;">重新开始</button></div></div>';
+  overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
+  document.body.appendChild(overlay);
+
+  document.getElementById('resumeContinue').addEventListener('click', function() {
+    overlay.remove();
+    resumeProgress(key);
+  });
+  document.getElementById('resumeRestart').addEventListener('click', function() {
+    overlay.remove();
+    clearProgress(key);
+    startFn();
+  });
+}
+
+// Resume saved progress for a specific key
+function resumeProgress(key) {
+  const data = loadProgress(key);
   if (!data) { showToast('没有可恢复的进度'); return; }
 
-  // Restore state
   state.mode = data.mode;
   state.questions = data.questions;
   state.currentIndex = data.currentIndex;
@@ -2655,8 +2733,11 @@ function resumeProgress() {
 
   // Verify questions still exist
   const validIds = state.questions.filter(id => getQuestionById(id));
-  if (validIds.length === 0) { clearProgress(); goHome(); return; }
+  if (validIds.length === 0) { clearProgress(key); goHome(); return; }
   state.questions = validIds;
+  if (state.currentIndex >= state.questions.length) {
+    state.currentIndex = state.questions.length - 1;
+  }
 
   if (state.mode === 'wrong') {
     renderWrongList();
@@ -2755,18 +2836,14 @@ function renderHome() {
       <p style="color:#888;font-size:0.9em;margin-top:6px;">题库共包含 <strong>${totalQ}</strong> 道题目，点击下方卡片开始练习</p>
     </div>
 
-    ${loadProgress() ? `
-    <div style="margin-bottom:12px;">
-      <div class="home-card" onclick="resumeProgress()" style="border-color:#52c41a;background:#f6ffed;">
-        <span class="icon">🔄</span>
-        <div class="title">继续上次练习</div>
-        <div class="desc">上次练习到第 <strong>${loadProgress().currentIndex + 1}</strong> 题<br>已完成 <strong>${Object.values(loadProgress().answered).filter(v => v !== undefined).length}</strong> 题</div>
-      </div>
+    ${getAllProgress().length > 0 ? `
+    <div style="margin-bottom:16px;padding:12px 16px;background:#fffbe6;border:1px solid #ffe58f;border-radius:10px;font-size:0.85em;">
+      <span style="color:#d48806;">💡 有 ${getAllProgress().length} 种题型的练习进度已保存，再次点击对应题型时会提示继续或重来</span>
     </div>
     ` : ''}
 
     <div class="home-grid">
-      <div class="home-card" onclick="startSequential()">
+      <div class="home-card" onclick="maybeResumeOrStart('sequential','顺序练习',startSequential)">
         <span class="icon">📝</span>
         <div class="title">顺序练习</div>
         <div class="desc">按题库顺序逐题练习<br>覆盖全部 ${totalQ} 道题目</div>
@@ -2792,27 +2869,27 @@ function renderHome() {
     </div>
 
     <div class="stats-row">
-      <div class="stat-item clickable" onclick="startSequential()" title="点击开始顺序练习全部题目">
+      <div class="stat-item clickable" onclick="maybeResumeOrStart('sequential','顺序练习',startSequential)" title="点击开始顺序练习全部题目">
         <div class="num">${totalQ}</div>
         <div class="label">📦 总题数</div>
       </div>
-      <div class="stat-item clickable" onclick="startTypePractice('term')" title="点击专项练习名词解释">
+      <div class="stat-item clickable" onclick="maybeResumeOrStart('term','名词解释专项练习',()=>startTypePractice('term'))" title="点击专项练习名词解释">
         <div class="num">${countTerm}</div>
         <div class="label">📖 名词解释</div>
       </div>
-      <div class="stat-item clickable" onclick="startTypePractice('judge')" title="点击专项练习判断题">
+      <div class="stat-item clickable" onclick="maybeResumeOrStart('judge','判断题专项练习',()=>startTypePractice('judge'))" title="点击专项练习判断题">
         <div class="num">${countJudge}</div>
         <div class="label">✍️ 判断题</div>
       </div>
-      <div class="stat-item clickable" onclick="startTypePractice('choice')" title="点击专项练习选择题">
+      <div class="stat-item clickable" onclick="maybeResumeOrStart('choice','选择题专项练习',()=>startTypePractice('choice'))" title="点击专项练习选择题">
         <div class="num">${countChoice}</div>
         <div class="label">📝 选择题</div>
       </div>
-      <div class="stat-item clickable" onclick="startTypePractice('qa')" title="点击专项练习问答题">
+      <div class="stat-item clickable" onclick="maybeResumeOrStart('qa','问答题专项练习',()=>startTypePractice('qa'))" title="点击专项练习问答题">
         <div class="num">${countQA}</div>
         <div class="label">💬 问答题</div>
       </div>
-      <div class="stat-item clickable" onclick="startTypePractice('calcCase')" title="点击专项练习计算/案例分析">
+      <div class="stat-item clickable" onclick="maybeResumeOrStart('calcCase','计算/案例专项练习',()=>startTypePractice('calcCase'))" title="点击专项练习计算/案例分析">
         <div class="num">${countCalcCase}</div>
         <div class="label">🔢 计算/案例</div>
       </div>
@@ -2830,7 +2907,7 @@ function startSequential() {
   state.correctCount = 0;
   state.answered = {};
   state.userAnswers = {};
-  clearProgress(); // clear any old saved progress
+  clearProgress('sequential'); // clear old sequential progress
   renderPractice();
   window.scrollTo(0, 0);
 }
@@ -2882,8 +2959,8 @@ function showRandomSettings() {
         <span style="font-size:0.8em;color:#999;">（5-${QUESTION_BANK.length}，建议20-50题）</span>
       </div>
       <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap;">
-        <button class="nav-btn primary" onclick="startRandom()">开始随机练习</button>
-        <button class="nav-btn" onclick="startRandomAll()">抽取全部题目（随机顺序）</button>
+        <button class="nav-btn primary" onclick="saveRandomCount();maybeResumeOrStart('random','随机练习',startRandom)">开始随机练习</button>
+        <button class="nav-btn" onclick="saveRandomCount();maybeResumeOrStart('random','随机练习（全部）',startRandomAll)">抽取全部题目（随机顺序）</button>
       </div>
     </div>
   `;
@@ -2892,6 +2969,10 @@ function showRandomSettings() {
     state.randomCount = Math.max(5, Math.min(QUESTION_BANK.length, parseInt(input.value) || 20));
     saveState();
   });
+  window.saveRandomCount = function() {
+    const inp = document.getElementById('randomCount');
+    if (inp) { state.randomCount = Math.max(5, Math.min(QUESTION_BANK.length, parseInt(inp.value) || 20)); saveState(); }
+  };
 }
 
 function startRandom() {
@@ -4090,8 +4171,8 @@ function renderFinished() {
       </div>
     ` : ''}
   `;
-  // Clear saved progress since practice is complete
-  clearProgress();
+  // Clear saved progress for this specific session since it's complete
+  clearProgress(getProgressKey());
 }
 
 function retryPractice() {
