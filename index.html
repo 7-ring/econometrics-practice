@@ -2755,16 +2755,6 @@ function renderHome() {
       <p style="color:#888;font-size:0.9em;margin-top:6px;">题库共包含 <strong>${totalQ}</strong> 道题目，点击下方卡片开始练习</p>
     </div>
 
-    ${loadProgress() ? `
-    <div style="margin-bottom:12px;">
-      <div class="home-card" onclick="resumeProgress()" style="border-color:#52c41a;background:#f6ffed;">
-        <span class="icon">🔄</span>
-        <div class="title">继续上次练习</div>
-        <div class="desc">上次练习到第 <strong>${loadProgress().currentIndex + 1}</strong> 题<br>已完成 <strong>${Object.values(loadProgress().answered).filter(v => v !== undefined).length}</strong> 题</div>
-      </div>
-    </div>
-    ` : ''}
-
     <div class="home-grid">
       <div class="home-card" onclick="startSequential()">
         <span class="icon">📝</span>
@@ -4004,11 +3994,9 @@ function jumpToQuestion() {
 function confirmExit() {
   const answered = Object.values(state.answered).filter(v => v !== undefined).length;
   if (answered > 0 && answered < state.questions.length) {
-    if (!confirm(`你已完成 ${answered}/${state.questions.length} 题，要保存进度并退出吗？`)) {
+    if (!confirm(`你已完成 ${answered}/${state.questions.length} 题，确定要退出吗？`)) {
       return;
     }
-    // Save progress before exiting
-    saveProgress();
   }
   goHome();
 }
