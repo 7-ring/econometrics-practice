@@ -2883,14 +2883,22 @@ function renderWrongList() {
       <button class="back-btn" onclick="goHome()">← 返回首页</button>
       <h3 style="margin-top:16px;color:#1a3a5c;">📋 错题集（${wrongQs.length} 题）</h3>
       <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
-        <span style="font-size:0.8em;color:#999;">全部重做：</span>
+        <span style="font-size:0.8em;color:#999;">重做：</span>
         <button class="nav-btn primary" onclick="startWrongPractice()" style="font-size:0.8em;padding:6px 14px;">全部(${wrongQs.length})</button>
-        <span style="font-size:0.8em;color:#999;margin-left:4px;">按题型：</span>
         ${wrongTypes['judge'] ? `<button class="nav-btn" onclick="startWrongByType('judge')" style="font-size:0.8em;padding:6px 14px;">判断(${wrongTypes['judge']})</button>` : ''}
         ${(wrongTypes['choice'] || 0) > 0 ? `<button class="nav-btn" onclick="startWrongByType('choice')" style="font-size:0.8em;padding:6px 14px;">选择(${wrongTypes['choice'] || 0})</button>` : ''}
         ${wrongTypes['term'] ? `<button class="nav-btn" onclick="startWrongByType('term')" style="font-size:0.8em;padding:6px 14px;">名词(${wrongTypes['term']})</button>` : ''}
         ${wrongTypes['qa'] ? `<button class="nav-btn" onclick="startWrongByType('qa')" style="font-size:0.8em;padding:6px 14px;">问答(${wrongTypes['qa']})</button>` : ''}
         ${(wrongTypes['calc'] || wrongTypes['case']) ? `<button class="nav-btn" onclick="startWrongByType('calcCase')" style="font-size:0.8em;padding:6px 14px;">计算/案例(${(wrongTypes['calc']||0)+(wrongTypes['case']||0)})</button>` : ''}
+      </div>
+      <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+        <span style="font-size:0.8em;color:#999;">背题：</span>
+        <button class="nav-btn" onclick="startWrongRecite('all')" style="font-size:0.8em;padding:6px 14px;background:#e6f7ff;">📖 全部(${wrongQs.length})</button>
+        ${wrongTypes['judge'] ? `<button class="nav-btn" onclick="startWrongRecite('judge')" style="font-size:0.8em;padding:6px 14px;">判断(${wrongTypes['judge']})</button>` : ''}
+        ${(wrongTypes['choice'] || 0) > 0 ? `<button class="nav-btn" onclick="startWrongRecite('choice')" style="font-size:0.8em;padding:6px 14px;">选择(${wrongTypes['choice'] || 0})</button>` : ''}
+        ${wrongTypes['term'] ? `<button class="nav-btn" onclick="startWrongRecite('term')" style="font-size:0.8em;padding:6px 14px;">名词(${wrongTypes['term']})</button>` : ''}
+        ${wrongTypes['qa'] ? `<button class="nav-btn" onclick="startWrongRecite('qa')" style="font-size:0.8em;padding:6px 14px;">问答(${wrongTypes['qa']})</button>` : ''}
+        ${(wrongTypes['calc'] || wrongTypes['case']) ? `<button class="nav-btn" onclick="startWrongRecite('calcCase')" style="font-size:0.8em;padding:6px 14px;">计算/案例(${(wrongTypes['calc']||0)+(wrongTypes['case']||0)})</button>` : ''}
         <button class="nav-btn danger" onclick="confirmClearWrongs()" style="font-size:0.8em;padding:6px 14px;">清空</button>
       </div>
     </div>
@@ -2965,6 +2973,96 @@ function startFavByType(typeFilter) {
   state.userAnswers = {};
   renderFavPractice(filtered);
   window.scrollTo(0, 0);
+}
+
+// ===== RECITE MODE (背题模式) =====
+// Render all questions on one scrollable page with answers directly visible
+
+function startWrongRecite(typeFilter) {
+  const wrongQs = [...wrongIds].map(id => getQuestionById(id)).filter(Boolean);
+  const filtered = typeFilter === 'all' ? wrongQs :
+    wrongQs.filter(q => typeFilter === 'calcCase' ? (q.type === 'calc' || q.type === 'case') :
+                          typeFilter === 'choice' ? (q.type === 'choice' || q.type === 'multichoice') :
+                          q.type === typeFilter);
+  if (filtered.length === 0) { showToast('该题型暂无错题'); return; }
+  renderReciteMode(filtered, '📋 错题背题模式');
+  window.scrollTo(0, 0);
+}
+
+function startFavRecite(typeFilter) {
+  const favQs = [...favoriteIds].map(id => getQuestionById(id)).filter(Boolean);
+  const filtered = typeFilter === 'all' ? favQs :
+    favQs.filter(q => typeFilter === 'calcCase' ? (q.type === 'calc' || q.type === 'case') :
+                          typeFilter === 'choice' ? (q.type === 'choice' || q.type === 'multichoice') :
+                          q.type === typeFilter);
+  if (filtered.length === 0) { showToast('该题型暂无收藏'); return; }
+  renderReciteMode(filtered, '⭐ 收藏背题模式');
+  window.scrollTo(0, 0);
+}
+
+function renderReciteMode(questions, title) {
+  let html = `
+    <div style="margin-bottom:12px;">
+      <button class="back-btn" onclick="goHome()">← 返回首页</button>
+      <span style="margin-left:12px;font-size:0.85em;color:#1890ff;">${title} · 共 ${questions.length} 题</span>
+    </div>
+  `;
+
+  questions.forEach((q, i) => {
+    const answerHtml = buildReciteAnswer(q);
+    html += `
+      <div class="card" style="margin-bottom:16px;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
+          <span class="${getTypeBadge(q.type)} badge">${getTypeLabel(q.type)}</span>
+          <span style="font-size:0.8em;color:#999;">#${i + 1}/${questions.length}</span>
+        </div>
+        <div class="q-text" style="margin-bottom:12px;">${q.question}</div>
+        ${q.options.length ? `
+          <ul class="options-list" style="margin-bottom:12px;">
+            ${q.options.map((opt, j) => {
+              const letter = String.fromCharCode(65 + j);
+              const isCorrect = q.type === 'choice' || q.type === 'multichoice' ? q.answer.includes(letter) : false;
+              return `<li>
+                <div class="option-btn ${isCorrect ? 'correct' : ''}" style="cursor:default;">
+                  <span class="opt-letter">${letter}</span>
+                  <span>${opt}</span>
+                </div>
+              </li>`;
+            }).join('')}
+          </ul>
+        ` : ''}
+        ${answerHtml}
+      </div>
+    `;
+  });
+
+  html += `
+    <div style="text-align:center;padding:20px 0;">
+      <button class="nav-btn primary" onclick="goHome()">🏠 返回首页</button>
+    </div>
+  `;
+
+  app.innerHTML = html;
+}
+
+function buildReciteAnswer(q) {
+  if (q.type === 'judge') {
+    const ansText = q.answer === 'true' ? '正确（√）' : '错误（×）';
+    return `<div style="padding:12px;background:#f6ffed;border:1px solid #b7eb8f;border-radius:8px;">
+      <span style="font-weight:600;color:#52c41a;">答案：</span>${ansText}
+    </div>`;
+  }
+  if (q.type === 'choice' || q.type === 'multichoice') {
+    return `<div style="padding:12px;background:#f6ffed;border:1px solid #b7eb8f;border-radius:8px;">
+      <span style="font-weight:600;color:#52c41a;">答案：</span>${q.answer}
+      ${q.options.length ? '(' + q.answer.split('').map(l => l + '. ' + q.options[l.charCodeAt(0) - 65]).join('；') + ')' : ''}
+    </div>`;
+  }
+  // Subjective
+  return `<div style="padding:12px;background:#f6ffed;border:1px solid #b7eb8f;border-radius:8px;">
+    <div style="font-weight:600;color:#52c41a;margin-bottom:6px;">参考答案：</div>
+    <div style="font-size:0.95em;line-height:1.6;color:#555;white-space:pre-wrap;">${escapeHtml(q.answer)}</div>
+  </div>`;
 }
 
 function renderWrongPractice(wrongQs) {
@@ -3071,14 +3169,22 @@ function renderFavorites() {
       <button class="back-btn" onclick="goHome()">← 返回首页</button>
       <h3 style="margin-top:16px;color:#1a3a5c;">⭐ 收藏题目（${favQs.length} 题）</h3>
       <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
-        <span style="font-size:0.8em;color:#999;">全部复习：</span>
+        <span style="font-size:0.8em;color:#999;">复习：</span>
         <button class="nav-btn primary" onclick="startFavoritesPractice()" style="font-size:0.8em;padding:6px 14px;">全部(${favQs.length})</button>
-        <span style="font-size:0.8em;color:#999;margin-left:4px;">按题型：</span>
         ${favTypes['judge'] ? `<button class="nav-btn" onclick="startFavByType('judge')" style="font-size:0.8em;padding:6px 14px;">判断(${favTypes['judge']})</button>` : ''}
         ${(favTypes['choice'] || 0) > 0 ? `<button class="nav-btn" onclick="startFavByType('choice')" style="font-size:0.8em;padding:6px 14px;">选择(${favTypes['choice'] || 0})</button>` : ''}
         ${favTypes['term'] ? `<button class="nav-btn" onclick="startFavByType('term')" style="font-size:0.8em;padding:6px 14px;">名词(${favTypes['term']})</button>` : ''}
         ${favTypes['qa'] ? `<button class="nav-btn" onclick="startFavByType('qa')" style="font-size:0.8em;padding:6px 14px;">问答(${favTypes['qa']})</button>` : ''}
         ${(favTypes['calc'] || favTypes['case']) ? `<button class="nav-btn" onclick="startFavByType('calcCase')" style="font-size:0.8em;padding:6px 14px;">计算/案例(${(favTypes['calc']||0)+(favTypes['case']||0)})</button>` : ''}
+      </div>
+      <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+        <span style="font-size:0.8em;color:#999;">背题：</span>
+        <button class="nav-btn" onclick="startFavRecite('all')" style="font-size:0.8em;padding:6px 14px;background:#e6f7ff;">📖 全部(${favQs.length})</button>
+        ${favTypes['judge'] ? `<button class="nav-btn" onclick="startFavRecite('judge')" style="font-size:0.8em;padding:6px 14px;">判断(${favTypes['judge']})</button>` : ''}
+        ${(favTypes['choice'] || 0) > 0 ? `<button class="nav-btn" onclick="startFavRecite('choice')" style="font-size:0.8em;padding:6px 14px;">选择(${favTypes['choice'] || 0})</button>` : ''}
+        ${favTypes['term'] ? `<button class="nav-btn" onclick="startFavRecite('term')" style="font-size:0.8em;padding:6px 14px;">名词(${favTypes['term']})</button>` : ''}
+        ${favTypes['qa'] ? `<button class="nav-btn" onclick="startFavRecite('qa')" style="font-size:0.8em;padding:6px 14px;">问答(${favTypes['qa']})</button>` : ''}
+        ${(favTypes['calc'] || favTypes['case']) ? `<button class="nav-btn" onclick="startFavRecite('calcCase')" style="font-size:0.8em;padding:6px 14px;">计算/案例(${(favTypes['calc']||0)+(favTypes['case']||0)})</button>` : ''}
       </div>
     </div>
   `;
