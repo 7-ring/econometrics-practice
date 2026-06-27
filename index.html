@@ -2606,6 +2606,75 @@ function saveState() {
   } catch(e) { /* ignore */ }
 }
 
+// Save current practice progress (can be resumed later)
+function saveProgress() {
+  if (state.questions.length === 0) return;
+  try {
+    localStorage.setItem(STORAGE_KEY + '_progress', JSON.stringify({
+      mode: state.mode,
+      questions: state.questions,
+      currentIndex: state.currentIndex,
+      correctCount: state.correctCount,
+      answered: state.answered,
+      userAnswers: state.userAnswers,
+      savedAt: new Date().toISOString()
+    }));
+  } catch(e) { /* ignore */ }
+}
+
+// Load saved progress (returns null if none or expired)
+function loadProgress() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY + '_progress');
+    if (!raw) return null;
+    const data = JSON.parse(raw);
+    // Only valid if there are unanswered questions
+    if (!data.questions || data.questions.length === 0) return null;
+    if (data.currentIndex >= data.questions.length) return null;
+    return data;
+  } catch(e) { return null; }
+}
+
+// Clear saved progress
+function clearProgress() {
+  try { localStorage.removeItem(STORAGE_KEY + '_progress'); } catch(e) {}
+}
+
+// Resume saved progress
+function resumeProgress() {
+  const data = loadProgress();
+  if (!data) { showToast('没有可恢复的进度'); return; }
+
+  // Restore state
+  state.mode = data.mode;
+  state.questions = data.questions;
+  state.currentIndex = data.currentIndex;
+  state.correctCount = data.correctCount || 0;
+  state.answered = data.answered || {};
+  state.userAnswers = data.userAnswers || {};
+
+  // Verify questions still exist
+  const validIds = state.questions.filter(id => getQuestionById(id));
+  if (validIds.length === 0) { clearProgress(); goHome(); return; }
+  state.questions = validIds;
+
+  if (state.mode === 'wrong') {
+    renderWrongList();
+  } else if (state.mode === 'favorites') {
+    renderFavorites();
+  } else {
+    renderPractice();
+  }
+  window.scrollTo(0, 0);
+}
+
+// Auto-save progress after each answer
+function autoSaveProgress() {
+  if (state.mode !== 'home' && state.questions.length > 0) {
+    saveProgress();
+  }
+}
+
 let wrongIds = new Set();
 let favoriteIds = new Set();
 
@@ -2686,6 +2755,16 @@ function renderHome() {
       <p style="color:#888;font-size:0.9em;margin-top:6px;">题库共包含 <strong>${totalQ}</strong> 道题目，点击下方卡片开始练习</p>
     </div>
 
+    ${loadProgress() ? `
+    <div style="margin-bottom:12px;">
+      <div class="home-card" onclick="resumeProgress()" style="border-color:#52c41a;background:#f6ffed;">
+        <span class="icon">🔄</span>
+        <div class="title">继续上次练习</div>
+        <div class="desc">上次练习到第 <strong>${loadProgress().currentIndex + 1}</strong> 题<br>已完成 <strong>${Object.values(loadProgress().answered).filter(v => v !== undefined).length}</strong> 题</div>
+      </div>
+    </div>
+    ` : ''}
+
     <div class="home-grid">
       <div class="home-card" onclick="startSequential()">
         <span class="icon">📝</span>
@@ -2751,6 +2830,7 @@ function startSequential() {
   state.correctCount = 0;
   state.answered = {};
   state.userAnswers = {};
+  clearProgress(); // clear any old saved progress
   renderPractice();
   window.scrollTo(0, 0);
 }
@@ -3548,6 +3628,7 @@ function handleJudgeAnswer(q, userAnswer) {
   }
 
   showJudgeResult(q, isCorrect);
+  autoSaveProgress();
 }
 
 function handleChoiceAnswer(q, userAnswer) {
@@ -3597,6 +3678,7 @@ function handleChoiceAnswer(q, userAnswer) {
   }
 
   showChoiceResult(q, isCorrect);
+  autoSaveProgress();
 }
 
 function showJudgeResult(q, isCorrect) {
@@ -3734,6 +3816,7 @@ function handleSelfAssess(result) {
   }
 
   updateStatsDisplay();
+  autoSaveProgress();
 }
 
 function showAnswerResult(q) {
@@ -3921,9 +4004,11 @@ function jumpToQuestion() {
 function confirmExit() {
   const answered = Object.values(state.answered).filter(v => v !== undefined).length;
   if (answered > 0 && answered < state.questions.length) {
-    if (!confirm(`你已完成 ${answered}/${state.questions.length} 题，确定要退出吗？进度不会丢失，下次可以从头开始。`)) {
+    if (!confirm(`你已完成 ${answered}/${state.questions.length} 题，要保存进度并退出吗？`)) {
       return;
     }
+    // Save progress before exiting
+    saveProgress();
   }
   goHome();
 }
@@ -4005,6 +4090,8 @@ function renderFinished() {
       </div>
     ` : ''}
   `;
+  // Clear saved progress since practice is complete
+  clearProgress();
 }
 
 function retryPractice() {
