@@ -1,0 +1,3780 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>计量经济学刷题系统</title>
+<style>
+/* ===== RESET & BASE ===== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", "PingFang SC", sans-serif;
+  background: #f0f2f5;
+  color: #333;
+  line-height: 1.6;
+  min-height: 100vh;
+}
+a { color: #1890ff; text-decoration: none; }
+
+/* ===== HEADER ===== */
+.header {
+  background: linear-gradient(135deg, #1a3a5c 0%, #2d6a9f 100%);
+  color: white;
+  padding: 16px 20px;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.header h1 { font-size: 1.3em; font-weight: 600; }
+.header .subtitle { font-size: 0.8em; opacity: 0.85; margin-top: 2px; }
+
+/* ===== CONTAINER ===== */
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+/* ===== CARDS ===== */
+.card {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 16px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+/* ===== HOME PAGE ===== */
+.home-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-top: 20px;
+}
+.home-card {
+  background: white;
+  border-radius: 12px;
+  padding: 24px 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.25s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  border: 2px solid transparent;
+}
+.home-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+  border-color: #1890ff;
+}
+.home-card .icon {
+  font-size: 2.5em;
+  margin-bottom: 10px;
+  display: block;
+}
+.home-card .title {
+  font-size: 1.1em;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: #1a3a5c;
+}
+.home-card .desc {
+  font-size: 0.85em;
+  color: #888;
+  line-height: 1.5;
+}
+
+/* Stats row on home page */
+.stats-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+.stat-item {
+  flex: 1;
+  min-width: 80px;
+  background: white;
+  border-radius: 10px;
+  padding: 14px 12px;
+  text-align: center;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+.stat-item .num { font-size: 1.5em; font-weight: 700; color: #1890ff; }
+.stat-item .label { font-size: 0.75em; color: #999; margin-top: 2px; }
+.stat-item.clickable { cursor: pointer; transition: all 0.2s; border: 2px solid transparent; }
+.stat-item.clickable:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); border-color: #1890ff; }
+.stat-item.clickable:hover .num { color: #40a9ff; }
+.stat-item.clickable:hover .label { color: #1890ff; }
+
+/* ===== TOP BAR ===== */
+.top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: white;
+  border-radius: 10px;
+  margin-bottom: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.top-bar .info { font-size: 0.85em; color: #666; }
+.top-bar .info strong { color: #1a3a5c; }
+.badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 0.75em;
+  font-weight: 600;
+  color: white;
+}
+.badge-term { background: #52c41a; }
+.badge-judge { background: #faad14; }
+.badge-choice { background: #1890ff; }
+.badge-multichoice { background: #722ed1; }
+.badge-qa { background: #13c2c2; }
+.badge-calc { background: #eb2f96; }
+.badge-case { background: #fa541c; }
+
+/* Progress bar */
+.progress-wrap {
+  background: white;
+  border-radius: 10px;
+  padding: 10px 16px;
+  margin-bottom: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.progress-bar {
+  flex: 1;
+  height: 6px;
+  background: #e8e8e8;
+  border-radius: 3px;
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #52c41a, #1890ff);
+  border-radius: 3px;
+  transition: width 0.3s;
+}
+.progress-text { font-size: 0.8em; color: #888; white-space: nowrap; }
+
+/* ===== QUESTION CARD ===== */
+.q-card {
+  background: white;
+  border-radius: 12px;
+  padding: 24px 20px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+.q-type-tag {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 4px;
+  font-size: 0.75em;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+.q-text {
+  font-size: 1.05em;
+  line-height: 1.7;
+  margin-bottom: 20px;
+  color: #1a1a1a;
+}
+
+/* ===== OPTIONS ===== */
+.options-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.option-btn {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 16px;
+  border: 2px solid #e8e8e8;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: #fafafa;
+  text-align: left;
+  width: 100%;
+  font-size: 0.95em;
+  line-height: 1.5;
+  color: #333;
+}
+.option-btn:hover {
+  border-color: #91d5ff;
+  background: #e6f7ff;
+}
+.option-btn .opt-letter {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  line-height: 28px;
+  text-align: center;
+  border-radius: 50%;
+  background: #e8e8e8;
+  font-weight: 600;
+  font-size: 0.85em;
+  color: #666;
+}
+.option-btn.selected {
+  border-color: #1890ff;
+  background: #e6f7ff;
+}
+.option-btn.selected .opt-letter {
+  background: #1890ff;
+  color: white;
+}
+.option-btn.correct {
+  border-color: #52c41a;
+  background: #f6ffed;
+}
+.option-btn.correct .opt-letter {
+  background: #52c41a;
+  color: white;
+}
+.option-btn.wrong {
+  border-color: #ff4d4f;
+  background: #fff2f0;
+}
+.option-btn.wrong .opt-letter {
+  background: #ff4d4f;
+  color: white;
+}
+.option-btn:disabled {
+  cursor: default;
+  opacity: 0.9;
+}
+
+/* ===== JUDGE BUTTONS ===== */
+.judge-btns {
+  display: flex;
+  gap: 12px;
+}
+.judge-btn {
+  flex: 1;
+  padding: 14px;
+  border: 2px solid #e8e8e8;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 1em;
+  font-weight: 600;
+  transition: all 0.2s;
+  background: #fafafa;
+  color: #333;
+}
+.judge-btn:hover { border-color: #91d5ff; background: #e6f7ff; }
+.judge-btn.correct { border-color: #52c41a; background: #f6ffed; color: #52c41a; }
+.judge-btn.wrong { border-color: #ff4d4f; background: #fff2f0; color: #ff4d4f; }
+.judge-btn:disabled { cursor: default; opacity: 0.9; }
+
+/* ===== ANSWER REVEAL ===== */
+.answer-box {
+  margin-top: 16px;
+  padding: 16px;
+  background: #f6ffed;
+  border: 1px solid #b7eb8f;
+  border-radius: 8px;
+  display: none;
+}
+.answer-box.show { display: block; }
+.answer-box.wrong-answer {
+  background: #fff2f0;
+  border-color: #ffa39e;
+}
+.answer-box .answer-label {
+  font-weight: 600;
+  margin-bottom: 6px;
+  font-size: 0.9em;
+}
+.answer-box .answer-label.correct-label { color: #52c41a; }
+.answer-box .answer-label.wrong-label { color: #ff4d4f; }
+.answer-box .answer-content {
+  font-size: 0.95em;
+  line-height: 1.6;
+  color: #555;
+  white-space: pre-wrap;
+}
+
+.show-answer-btn {
+  display: block;
+  width: 100%;
+  padding: 12px;
+  background: #1890ff;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.95em;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-top: 16px;
+}
+.show-answer-btn:hover { background: #40a9ff; }
+
+/* ===== NAVIGATION ===== */
+.nav-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 0;
+  gap: 12px;
+}
+.nav-btn {
+  padding: 10px 24px;
+  border: 1px solid #d9d9d9;
+  border-radius: 8px;
+  background: white;
+  cursor: pointer;
+  font-size: 0.9em;
+  transition: all 0.2s;
+  color: #333;
+  white-space: nowrap;
+}
+.nav-btn:hover { border-color: #1890ff; color: #1890ff; }
+.nav-btn:disabled { opacity: 0.4; cursor: default; }
+.nav-btn:disabled:hover { border-color: #d9d9d9; color: #333; }
+.nav-btn.primary { background: #1890ff; color: white; border-color: #1890ff; }
+.nav-btn.primary:hover { background: #40a9ff; }
+.nav-btn.danger { background: white; color: #ff4d4f; border-color: #ffa39e; }
+.nav-btn.danger:hover { background: #fff2f0; }
+
+/* ===== FAVORITE STAR ===== */
+.star-btn {
+  background: none;
+  border: none;
+  font-size: 1.5em;
+  cursor: pointer;
+  transition: transform 0.2s;
+  padding: 4px 8px;
+  line-height: 1;
+}
+.star-btn:hover { transform: scale(1.2); }
+.star-btn.active { color: #faad14; }
+.star-btn.inactive { color: #d9d9d9; }
+
+/* ===== MODE SELECTOR (random count) ===== */
+.mode-settings {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 12px 0;
+}
+.mode-settings input[type="number"] {
+  width: 70px;
+  padding: 6px 10px;
+  border: 1px solid #d9d9d9;
+  border-radius: 6px;
+  font-size: 0.9em;
+  text-align: center;
+}
+.mode-settings label { font-size: 0.85em; color: #666; }
+
+/* ===== EMPTY STATE ===== */
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: #999;
+}
+.empty-state .icon { font-size: 3em; display: block; margin-bottom: 12px; }
+
+/* ===== BACK BUTTON ===== */
+.back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 14px;
+  background: transparent;
+  border: 1px solid #d9d9d9;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85em;
+  color: #666;
+  transition: all 0.2s;
+}
+.back-btn:hover { border-color: #1890ff; color: #1890ff; }
+
+/* ===== TOAST ===== */
+.toast {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #333;
+  color: white;
+  padding: 10px 24px;
+  border-radius: 20px;
+  font-size: 0.9em;
+  z-index: 999;
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+}
+.toast.show { opacity: 1; }
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 600px) {
+  .container { padding: 10px; }
+  .header { padding: 12px 16px; }
+  .header h1 { font-size: 1.15em; }
+  .q-card { padding: 16px 14px; }
+  .q-text { font-size: 0.95em; }
+  .home-grid { grid-template-columns: 1fr; }
+  .judge-btns { flex-direction: column; }
+  .nav-btn { padding: 8px 16px; font-size: 0.8em; }
+  .top-bar { font-size: 0.8em; }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>📊 计量经济学刷题系统</h1>
+  <div class="subtitle">Econometrics Practice</div>
+</div>
+
+<div class="container" id="app"></div>
+
+<div class="toast" id="toast"></div>
+
+<!-- EMBEDDED QUESTION DATA -->
+<script>
+const QUESTION_BANK = [
+  {
+    "id": 1,
+    "type": "term",
+    "question": "计量经济学",
+    "options": [],
+    "answer": "是运用概率统计方法对经济变量之间的因果关系进行定量分析的科学。",
+    "explanation": ""
+  },
+  {
+    "id": 2,
+    "type": "term",
+    "question": "OLS",
+    "options": [],
+    "answer": "通过求残差平方和的最小值估计参数的方法",
+    "explanation": ""
+  },
+  {
+    "id": 3,
+    "type": "term",
+    "question": "WLS",
+    "options": [],
+    "answer": "对原模型进行加权，使之成为一个新的不存在异方差的模型，然后采用普通最小二乘法估计其参数的方法。",
+    "explanation": ""
+  },
+  {
+    "id": 4,
+    "type": "term",
+    "question": "GLS",
+    "options": [],
+    "answer": "指变换原回归模型，使变换后模型的随机误差项消除自相关与异方差，进而用普通最小二乘法（OLS）估计回归系数。",
+    "explanation": ""
+  },
+  {
+    "id": 5,
+    "type": "term",
+    "question": "BLUE",
+    "options": [],
+    "answer": "如果一个参数的估计量具有线性、无偏性和估计量方差最小等统计学性质，称其为最佳线性无偏估计量。",
+    "explanation": ""
+  },
+  {
+    "id": 6,
+    "type": "term",
+    "question": "高斯定理",
+    "options": [],
+    "answer": "在给定经典线性回归模型的假定下，最小二乘估计量在所有线性无偏估计量中具有最小方差，即最优线性无偏估计量。",
+    "explanation": ""
+  },
+  {
+    "id": 7,
+    "type": "term",
+    "question": "回归分析",
+    "options": [],
+    "answer": "对被解释变量均值与解释变量之间数量关系的分析。",
+    "explanation": ""
+  },
+  {
+    "id": 8,
+    "type": "term",
+    "question": "面板数据",
+    "options": [],
+    "answer": "同时包含多个个体（如企业、国家）在多个时间点上的观测数据，兼具横截面和时间序列维度。",
+    "explanation": ""
+  },
+  {
+    "id": 9,
+    "type": "term",
+    "question": "总体回归线",
+    "options": [],
+    "answer": "当解释变量X取给定值时因变量Y的条件均值或期望值的轨迹。",
+    "explanation": ""
+  },
+  {
+    "id": 10,
+    "type": "term",
+    "question": "样本回归线",
+    "options": [],
+    "answer": "样本回归线即最接近样本点的直线。",
+    "explanation": ""
+  },
+  {
+    "id": 11,
+    "type": "term",
+    "question": "普通最小二乘法",
+    "options": [],
+    "answer": "通过求残差平方和的最小值，估计参数的方法。",
+    "explanation": ""
+  },
+  {
+    "id": 12,
+    "type": "term",
+    "question": "标准误",
+    "options": [],
+    "answer": "参数估计量估计的标准差，它体现参数估计的误差或精确程度。",
+    "explanation": ""
+  },
+  {
+    "id": 13,
+    "type": "term",
+    "question": "异方差稳健标准误",
+    "options": [],
+    "answer": "在异方差假定条件下估计的参数估计量的标准误，它是真实标准误的一致估计。",
+    "explanation": ""
+  },
+  {
+    "id": 14,
+    "type": "term",
+    "question": "异方差自相关稳健标准误（HAC）",
+    "options": [],
+    "answer": "当随机扰动项既存在异方差又存在自相关时，使用尼威-韦斯特方法计算的异方差自相关稳健标准误，是估计量真实标准误的一致估计。",
+    "explanation": ""
+  },
+  {
+    "id": 15,
+    "type": "term",
+    "question": "虚拟变量",
+    "options": [],
+    "answer": "量化了的定性变量，只有两个取值，要么取值为0，要么取值为1，1和0分别表示具有某种属性和不具有某种属性。",
+    "explanation": ""
+  },
+  {
+    "id": 16,
+    "type": "term",
+    "question": "工具变量法",
+    "options": [],
+    "answer": "当解释变量内生时，引入与内生变量相关但与误差项不相关的外生变量，用于解决内生性问题。",
+    "explanation": ""
+  },
+  {
+    "id": 17,
+    "type": "term",
+    "question": "遗漏变量偏差",
+    "options": [],
+    "answer": "计量模型设定时遗漏了解释变量，而被遗漏的解释变量与模型中的其他解释变量相关导致估计量有偏不一致。",
+    "explanation": ""
+  },
+  {
+    "id": 18,
+    "type": "term",
+    "question": "内生解释变量",
+    "options": [],
+    "answer": "解释变量x与扰动项u相关，则称解释变量为内生解释变量。",
+    "explanation": ""
+  },
+  {
+    "id": 19,
+    "type": "term",
+    "question": "迭代期望定律",
+    "options": [],
+    "answer": "当条件期望为常数时，条件期望的期望等于无条件期望。",
+    "explanation": ""
+  },
+  {
+    "id": 20,
+    "type": "term",
+    "question": "普通标准误",
+    "options": [],
+    "answer": "在扰动项同方差没有自相关的条件下，计算的参数估计量的标准误。",
+    "explanation": ""
+  },
+  {
+    "id": 21,
+    "type": "term",
+    "question": "不可识别",
+    "options": [],
+    "answer": "工具变量个数小于内生解释变量个数。",
+    "explanation": ""
+  },
+  {
+    "id": 22,
+    "type": "term",
+    "question": "恰好识别",
+    "options": [],
+    "answer": "工具变量个数等于内生解释变量个数。",
+    "explanation": ""
+  },
+  {
+    "id": 23,
+    "type": "term",
+    "question": "过度识别",
+    "options": [],
+    "answer": "工具变量个数大于内生解释变量个数。",
+    "explanation": ""
+  },
+  {
+    "id": 24,
+    "type": "term",
+    "question": "内生性",
+    "options": [],
+    "answer": "如果解释变量与扰动项相关，致使OLS估计量不一致，统称内生性偏差，简称内生性。",
+    "explanation": ""
+  },
+  {
+    "id": 25,
+    "type": "term",
+    "question": "拟合优度",
+    "options": [],
+    "answer": "样本回归线对数据拟合的优良程度。也是样本回归线对应的模型对被解释变量变化的解释程度。",
+    "explanation": ""
+  },
+  {
+    "id": 26,
+    "type": "term",
+    "question": "两阶段最小二乘法（2SLS）",
+    "options": [],
+    "answer": "处理内生性的常用方法，第一阶段用工具变量对内生解释变量进行回归，第二阶段用第一阶段拟合值代入原模型估计参数。",
+    "explanation": ""
+  },
+  {
+    "id": 27,
+    "type": "term",
+    "question": "随机干扰项",
+    "options": [],
+    "answer": "在回归模型中，随机干扰项是一个随机变量，它代表了模型中未包含的所有影响被解释变量的因素的综合影响。",
+    "explanation": ""
+  },
+  {
+    "id": 28,
+    "type": "term",
+    "question": "多重共线性",
+    "options": [],
+    "answer": "多重共线性是指在多元线性回归模型中，两个或多个解释变量之间存在较强的线性相关性。",
+    "explanation": ""
+  },
+  {
+    "id": 29,
+    "type": "term",
+    "question": "异方差性",
+    "options": [],
+    "answer": "异方差性是指在回归模型中，随机干扰项的方差随着解释变量的不同取值而变化。",
+    "explanation": ""
+  },
+  {
+    "id": 30,
+    "type": "term",
+    "question": "工具变量",
+    "options": [],
+    "answer": "需要满足两个基本条件：一是与内生解释变量高度相关；二是与模型的随机干扰项不相关。",
+    "explanation": ""
+  },
+  {
+    "id": 31,
+    "type": "term",
+    "question": "估计量",
+    "options": [],
+    "answer": "估计总体参数的统计量。",
+    "explanation": ""
+  },
+  {
+    "id": 32,
+    "type": "term",
+    "question": "估计式",
+    "options": [],
+    "answer": "估计总体参数的方程或表达式。",
+    "explanation": ""
+  },
+  {
+    "id": 33,
+    "type": "term",
+    "question": "估计值",
+    "options": [],
+    "answer": "是通过估计量和样本数据计算得到总体参数的具体值。",
+    "explanation": ""
+  },
+  {
+    "id": 34,
+    "type": "term",
+    "question": "无偏估计量",
+    "options": [],
+    "answer": "估计量的期望值等于被估计的总体参数。",
+    "explanation": ""
+  },
+  {
+    "id": 35,
+    "type": "term",
+    "question": "有效估计量",
+    "options": [],
+    "answer": "在无偏估计量中，方差最小的估计量被称为有效估计量。",
+    "explanation": ""
+  },
+  {
+    "id": 36,
+    "type": "term",
+    "question": "一致性",
+    "options": [],
+    "answer": "如果随着样本容量的增加，估计量依概率收敛于被估计的总体参数。",
+    "explanation": ""
+  },
+  {
+    "id": 37,
+    "type": "term",
+    "question": "区间估计",
+    "options": [],
+    "answer": "基于一定的置信度，构建包含真实参数的区间。",
+    "explanation": ""
+  },
+  {
+    "id": 38,
+    "type": "judge",
+    "question": "计量经济学面临的最大问题是内生性问题。",
+    "options": [],
+    "answer": "true",
+    "explanation": ""
+  },
+  {
+    "id": 39,
+    "type": "judge",
+    "question": "时间序列数据容易出现自相关",
+    "options": [],
+    "answer": "true",
+    "explanation": ""
+  },
+  {
+    "id": 40,
+    "type": "judge",
+    "question": "截面数据容易出现异方差",
+    "options": [],
+    "answer": "true",
+    "explanation": ""
+  },
+  {
+    "id": 41,
+    "type": "judge",
+    "question": "多重共线性不影响OLS的BLUE性质",
+    "options": [],
+    "answer": "true",
+    "explanation": ""
+  },
+  {
+    "id": 42,
+    "type": "judge",
+    "question": "一致性是对估计量的最低要求",
+    "options": [],
+    "answer": "true",
+    "explanation": ""
+  },
+  {
+    "id": 43,
+    "type": "judge",
+    "question": "样本回归直线是样本中被解释变量Y条件均值的连线。",
+    "options": [],
+    "answer": "false",
+    "explanation": ""
+  },
+  {
+    "id": 44,
+    "type": "judge",
+    "question": "如果估计量具有一致性，则增加样本量会使参数估计值更接近参数真实值。",
+    "options": [],
+    "answer": "false",
+    "explanation": ""
+  },
+  {
+    "id": 45,
+    "type": "judge",
+    "question": "多重共线使OLS估计量不再是最佳线性无偏估计量。",
+    "options": [],
+    "answer": "false",
+    "explanation": ""
+  },
+  {
+    "id": 46,
+    "type": "judge",
+    "question": "如果统计上是显著的，那么参数估计值和假设值的差距一定很大。",
+    "options": [],
+    "answer": "false",
+    "explanation": ""
+  },
+  {
+    "id": 47,
+    "type": "judge",
+    "question": "解释变量的测量误差一定会带来内生性问题。",
+    "options": [],
+    "answer": "true",
+    "explanation": ""
+  },
+  {
+    "id": 48,
+    "type": "judge",
+    "question": "如果内生解释变量与随机扰动项同期相关，则得到的参数估计量有偏且非一致。",
+    "options": [],
+    "answer": "true",
+    "explanation": ""
+  },
+  {
+    "id": 49,
+    "type": "judge",
+    "question": "最接近样本点的直线就是最接近总体回归直线的直线。",
+    "options": [],
+    "answer": "true",
+    "explanation": ""
+  },
+  {
+    "id": 50,
+    "type": "judge",
+    "question": "既是的估计又是的估计",
+    "options": [],
+    "answer": "true",
+    "explanation": ""
+  },
+  {
+    "id": 51,
+    "type": "judge",
+    "question": "虚拟变量只能取值为0和1。",
+    "options": [],
+    "answer": "true",
+    "explanation": ""
+  },
+  {
+    "id": 52,
+    "type": "judge",
+    "question": "时间序列数据容易存在自相关。",
+    "options": [],
+    "answer": "true",
+    "explanation": ""
+  },
+  {
+    "id": 53,
+    "type": "judge",
+    "question": "横截面数据容易存在异方差。",
+    "options": [],
+    "answer": "true",
+    "explanation": ""
+  },
+  {
+    "id": 54,
+    "type": "judge",
+    "question": "遗漏变量问题一定会存在。",
+    "options": [],
+    "answer": "true",
+    "explanation": ""
+  },
+  {
+    "id": 55,
+    "type": "judge",
+    "question": "遗漏变量一定会导致遗漏变量偏差。",
+    "options": [],
+    "answer": "false",
+    "explanation": ""
+  },
+  {
+    "id": 56,
+    "type": "judge",
+    "question": "DW检验统计量服从DW分布。",
+    "options": [],
+    "answer": "true",
+    "explanation": ""
+  },
+  {
+    "id": 57,
+    "type": "judge",
+    "question": "异方差稳健标准误一般大于普通标准误。",
+    "options": [],
+    "answer": "true",
+    "explanation": ""
+  },
+  {
+    "id": 58,
+    "type": "judge",
+    "question": "尼威-韦斯特标准误（HAC）一般大于普通标准误。",
+    "options": [],
+    "answer": "true",
+    "explanation": ""
+  },
+  {
+    "id": 59,
+    "type": "judge",
+    "question": "计量经济学模型与经济理论模型的区别在于扰动项。",
+    "options": [],
+    "answer": "true",
+    "explanation": ""
+  },
+  {
+    "id": 60,
+    "type": "judge",
+    "question": "将因变量Y的样本条件均值连成一条线，即样本回归线。",
+    "options": [],
+    "answer": "false",
+    "explanation": ""
+  },
+  {
+    "id": 61,
+    "type": "judge",
+    "question": "估计量=估计式=估计值。",
+    "options": [],
+    "answer": "false",
+    "explanation": ""
+  },
+  {
+    "id": 62,
+    "type": "judge",
+    "question": "无条件期望等于条件期望的期望。",
+    "options": [],
+    "answer": "true",
+    "explanation": ""
+  },
+  {
+    "id": 63,
+    "type": "judge",
+    "question": "在计量经济学中，扰动项与若相关一般是正相关。",
+    "options": [],
+    "answer": "true",
+    "explanation": ""
+  },
+  {
+    "id": 64,
+    "type": "judge",
+    "question": "解释变量越多，模型解释被解释变量变化的程度越高",
+    "options": [],
+    "answer": "true",
+    "explanation": ""
+  },
+  {
+    "id": 65,
+    "type": "judge",
+    "question": "R²不能用于比较两个回归方程的拟合优度",
+    "options": [],
+    "answer": "true",
+    "explanation": ""
+  },
+  {
+    "id": 66,
+    "type": "judge",
+    "question": "AIC越小，模型拟合优度更好。",
+    "options": [],
+    "answer": "true",
+    "explanation": ""
+  },
+  {
+    "id": 67,
+    "type": "judge",
+    "question": "能用于比较两个回归方程的拟合优度",
+    "options": [],
+    "answer": "true",
+    "explanation": ""
+  },
+  {
+    "id": 68,
+    "type": "judge",
+    "question": "总体参数的95%的置信区间指区间包含的概率是95%。",
+    "options": [],
+    "answer": "false",
+    "explanation": ""
+  },
+  {
+    "id": 69,
+    "type": "judge",
+    "question": "0≦R²≦1",
+    "options": [],
+    "answer": "true",
+    "explanation": ""
+  },
+  {
+    "id": 70,
+    "type": "judge",
+    "question": "0≦≦1",
+    "options": [],
+    "answer": "false",
+    "explanation": ""
+  },
+  {
+    "id": 71,
+    "type": "judge",
+    "question": "越小，显著性水平越高。",
+    "options": [],
+    "answer": "true",
+    "explanation": ""
+  },
+  {
+    "id": 72,
+    "type": "judge",
+    "question": "越小，越不容易拒绝原假设。",
+    "options": [],
+    "answer": "true",
+    "explanation": ""
+  },
+  {
+    "id": 73,
+    "type": "judge",
+    "question": "在双对数模型中，偏回归系数度量了被解释变量关于解释变量的弹性。",
+    "options": [],
+    "answer": "true",
+    "explanation": ""
+  },
+  {
+    "id": 74,
+    "type": "judge",
+    "question": "异方差是指扰动项的方差各不相同。",
+    "options": [],
+    "answer": "false",
+    "explanation": ""
+  },
+  {
+    "id": 75,
+    "type": "judge",
+    "question": "一元线性回归模型不存在多重线性问题。",
+    "options": [],
+    "answer": "true",
+    "explanation": ""
+  },
+  {
+    "id": 76,
+    "type": "judge",
+    "question": "多元线性回归模型一定存在多重线性问题。",
+    "options": [],
+    "answer": "true",
+    "explanation": ""
+  },
+  {
+    "id": 77,
+    "type": "judge",
+    "question": "多重共线中t检验失效是因为低估了真实的标准误",
+    "options": [],
+    "answer": "false",
+    "explanation": ""
+  },
+  {
+    "id": 78,
+    "type": "judge",
+    "question": "测量误差一定导致内生性问题",
+    "options": [],
+    "answer": "false",
+    "explanation": ""
+  },
+  {
+    "id": 79,
+    "type": "judge",
+    "question": "解决内生性问题的最普遍的方法是工具变量法。",
+    "options": [],
+    "answer": "true",
+    "explanation": ""
+  },
+  {
+    "id": 80,
+    "type": "judge",
+    "question": "虚拟变量的个数等于定性变量属性的个数减1。",
+    "options": [],
+    "answer": "false",
+    "explanation": ""
+  },
+  {
+    "id": 81,
+    "type": "judge",
+    "question": "如果工具变量与内生解释变量弱相关，估计量的方差会很大。",
+    "options": [],
+    "answer": "true",
+    "explanation": ""
+  },
+  {
+    "id": 82,
+    "type": "judge",
+    "question": "如果第一阶段回归的F统计量的值大于10，则不存在弱工具变量。",
+    "options": [],
+    "answer": "true",
+    "explanation": ""
+  },
+  {
+    "id": 83,
+    "type": "judge",
+    "question": "DW检验的原假设是DW=0",
+    "options": [],
+    "answer": "false",
+    "explanation": ""
+  },
+  {
+    "id": 84,
+    "type": "judge",
+    "question": "DW的取值范围是0≦DW≦1",
+    "options": [],
+    "answer": "false",
+    "explanation": ""
+  },
+  {
+    "id": 85,
+    "type": "judge",
+    "question": "DW=2时，不存在一阶自相关。",
+    "options": [],
+    "answer": "true",
+    "explanation": ""
+  },
+  {
+    "id": 86,
+    "type": "judge",
+    "question": "如果DW的值落在与之间，表明不存在一阶自相关。",
+    "options": [],
+    "answer": "false",
+    "explanation": ""
+  },
+  {
+    "id": 87,
+    "type": "judge",
+    "question": "当扰动项存在高阶自相关时，可采用DW检验。",
+    "options": [],
+    "answer": "false",
+    "explanation": ""
+  },
+  {
+    "id": 88,
+    "type": "judge",
+    "question": "当扰动项存在高阶自相关时，可采用LM检验。",
+    "options": [],
+    "answer": "true",
+    "explanation": ""
+  },
+  {
+    "id": 89,
+    "type": "judge",
+    "question": "重要的解释变量没有通过t检验，可能存在严重的多重共线性。",
+    "options": [],
+    "answer": "true",
+    "explanation": ""
+  },
+  {
+    "id": 90,
+    "type": "judge",
+    "question": "当方差膨胀因子VIF小于10，表明存在严重的多重共线性。",
+    "options": [],
+    "answer": "false",
+    "explanation": ""
+  },
+  {
+    "id": 91,
+    "type": "judge",
+    "question": "扰动项的方差与估计量的方差成正比。",
+    "options": [],
+    "answer": "true",
+    "explanation": ""
+  },
+  {
+    "id": 92,
+    "type": "judge",
+    "question": "扰动项的方差与估计量的标准误成正比",
+    "options": [],
+    "answer": "true",
+    "explanation": ""
+  },
+  {
+    "id": 93,
+    "type": "judge",
+    "question": "样本量n与估计量的方差成反比。",
+    "options": [],
+    "answer": "true",
+    "explanation": ""
+  },
+  {
+    "id": 94,
+    "type": "judge",
+    "question": "样本量n与估计量的标准误成反比。",
+    "options": [],
+    "answer": "true",
+    "explanation": ""
+  },
+  {
+    "id": 95,
+    "type": "judge",
+    "question": "样本量n与回归系数的t值成正比。",
+    "options": [],
+    "answer": "true",
+    "explanation": ""
+  },
+  {
+    "id": 96,
+    "type": "judge",
+    "question": "样本量n与回归系数的P值成反比。",
+    "options": [],
+    "answer": "true",
+    "explanation": ""
+  },
+  {
+    "id": 97,
+    "type": "judge",
+    "question": "简单线性回归模型与多元线性回归模型的基本假定是相同的。",
+    "options": [],
+    "answer": "false",
+    "explanation": ""
+  },
+  {
+    "id": 98,
+    "type": "judge",
+    "question": "在计量经济模型中，随机扰动项与残差项无区别。",
+    "options": [],
+    "answer": "false",
+    "explanation": ""
+  },
+  {
+    "id": 99,
+    "type": "judge",
+    "question": "在多元线性回归模型中一定存在多重共线问题。",
+    "options": [],
+    "answer": "true",
+    "explanation": ""
+  },
+  {
+    "id": 100,
+    "type": "judge",
+    "question": "越接近于1，多重共线性越严重。",
+    "options": [],
+    "answer": "true",
+    "explanation": ""
+  },
+  {
+    "id": 101,
+    "type": "judge",
+    "question": "多重共线使参数估计量的方差变大，所以OLS估计量不是有效估计量",
+    "options": [],
+    "answer": "false",
+    "explanation": ""
+  },
+  {
+    "id": 102,
+    "type": "judge",
+    "question": "给定置信度，置信区间越大，区间估计越精确。",
+    "options": [],
+    "answer": "false",
+    "explanation": ""
+  },
+  {
+    "id": 103,
+    "type": "judge",
+    "question": "拟合优度R²体现了模型解释被解释变量变化的程度。",
+    "options": [],
+    "answer": "true",
+    "explanation": ""
+  },
+  {
+    "id": 104,
+    "type": "judge",
+    "question": "加权最小二乘法和普通最小二乘法都是广义最小二乘法的特例。",
+    "options": [],
+    "answer": "true",
+    "explanation": ""
+  },
+  {
+    "id": 105,
+    "type": "judge",
+    "question": "显著性水平的选择决定了参数估计值与参数假设值之间的差异是否显著。",
+    "options": [],
+    "answer": "true",
+    "explanation": ""
+  },
+  {
+    "id": 106,
+    "type": "judge",
+    "question": "线性模型是指回归模型中的因变量关于解释变量线性。",
+    "options": [],
+    "answer": "false",
+    "explanation": ""
+  },
+  {
+    "id": 107,
+    "type": "judge",
+    "question": "当我们拒绝这个原假设时，我们可以说显著不为零。",
+    "options": [],
+    "answer": "true",
+    "explanation": ""
+  },
+  {
+    "id": 108,
+    "type": "judge",
+    "question": "广义最小二乘GLS可以同时解决异方差与自相关问题。",
+    "options": [],
+    "answer": "true",
+    "explanation": ""
+  },
+  {
+    "id": 109,
+    "type": "judge",
+    "question": "扰动项与解释变量存在异期相关导致OLS估计量有偏且不一致。",
+    "options": [],
+    "answer": "false",
+    "explanation": ""
+  },
+  {
+    "id": 110,
+    "type": "judge",
+    "question": "P值越小，越不容易拒绝原假设。",
+    "options": [],
+    "answer": "false",
+    "explanation": ""
+  },
+  {
+    "id": 111,
+    "type": "judge",
+    "question": "显著性水平越大，越容易拒绝原假设。",
+    "options": [],
+    "answer": "true",
+    "explanation": ""
+  },
+  {
+    "id": 112,
+    "type": "judge",
+    "question": "二阶自相关是指扰动项ut与ut-2相关。",
+    "options": [],
+    "answer": "false",
+    "explanation": ""
+  },
+  {
+    "id": 113,
+    "type": "judge",
+    "question": "不严重的多重共线性可忽略。",
+    "options": [],
+    "answer": "true",
+    "explanation": ""
+  },
+  {
+    "id": 114,
+    "type": "judge",
+    "question": "滞后效应导致空间自相关。",
+    "options": [],
+    "answer": "false",
+    "explanation": ""
+  },
+  {
+    "id": 115,
+    "type": "judge",
+    "question": "溢出效应导致序列自相关。",
+    "options": [],
+    "answer": "false",
+    "explanation": ""
+  },
+  {
+    "id": 116,
+    "type": "judge",
+    "question": "解释变量的个数增加，一定变小",
+    "options": [],
+    "answer": "false",
+    "explanation": ""
+  },
+  {
+    "id": 117,
+    "type": "judge",
+    "question": "在仅存在不完全多重共线时OLS估计量仍为最优线性无偏估计量",
+    "options": [],
+    "answer": "true",
+    "explanation": ""
+  },
+  {
+    "id": 118,
+    "type": "judge",
+    "question": "估计量若不具有一致性则不可用",
+    "options": [],
+    "answer": "true",
+    "explanation": ""
+  },
+  {
+    "id": 119,
+    "type": "judge",
+    "question": "计量经济学中，扰动项之间的自相关一般为正自相关",
+    "options": [],
+    "answer": "true",
+    "explanation": ""
+  },
+  {
+    "id": 120,
+    "type": "judge",
+    "question": "在仅存在多重共线的情况下，高斯定理仍然成立",
+    "options": [],
+    "answer": "true",
+    "explanation": ""
+  },
+  {
+    "id": 121,
+    "type": "judge",
+    "question": "VIF＞10，表明存在严重多重共线问题",
+    "options": [],
+    "answer": "true",
+    "explanation": ""
+  },
+  {
+    "id": 122,
+    "type": "judge",
+    "question": "如果VIF<10，多重共线性是一个可以忽略的问题",
+    "options": [],
+    "answer": "true",
+    "explanation": ""
+  },
+  {
+    "id": 123,
+    "type": "judge",
+    "question": "如果被解释变量存在测量误差偏差一定会导致测量误差偏差",
+    "options": [],
+    "answer": "false",
+    "explanation": ""
+  },
+  {
+    "id": 124,
+    "type": "judge",
+    "question": "置信区间是随机区间",
+    "options": [],
+    "answer": "true",
+    "explanation": ""
+  },
+  {
+    "id": 125,
+    "type": "judge",
+    "question": "如果存在异方差下，基于普通标准误计算t值会高估t值",
+    "options": [],
+    "answer": "true",
+    "explanation": ""
+  },
+  {
+    "id": 126,
+    "type": "judge",
+    "question": "能使残差绝对值取最小值的直线就是样本回归线。",
+    "options": [],
+    "answer": "true",
+    "explanation": ""
+  },
+  {
+    "id": 127,
+    "type": "judge",
+    "question": "如果应用OLS估计系数，则残差均值为0",
+    "options": [],
+    "answer": "true",
+    "explanation": ""
+  },
+  {
+    "id": 128,
+    "type": "judge",
+    "question": "如果应用OLS估计系数，则Y的均值等于Y的估计值的均值",
+    "options": [],
+    "answer": "true",
+    "explanation": ""
+  },
+  {
+    "id": 129,
+    "type": "judge",
+    "question": "BP检验用于检验异方差，BG检验用于检验自相关",
+    "options": [],
+    "answer": "true",
+    "explanation": ""
+  },
+  {
+    "id": 130,
+    "type": "judge",
+    "question": "在教材中，k是解释变量的个数",
+    "options": [],
+    "answer": "false",
+    "explanation": ""
+  },
+  {
+    "id": 131,
+    "type": "judge",
+    "question": "在教材中，k是回归系数的个数",
+    "options": [],
+    "answer": "true",
+    "explanation": ""
+  },
+  {
+    "id": 132,
+    "type": "judge",
+    "question": "R²与残差平方和（RSS）成反比",
+    "options": [],
+    "answer": "true",
+    "explanation": ""
+  },
+  {
+    "id": 133,
+    "type": "judge",
+    "question": "＜R²",
+    "options": [],
+    "answer": "true",
+    "explanation": ""
+  },
+  {
+    "id": 134,
+    "type": "judge",
+    "question": "K增加，也增加",
+    "options": [],
+    "answer": "false",
+    "explanation": ""
+  },
+  {
+    "id": 135,
+    "type": "judge",
+    "question": "经典线性回归模型中，解释变量之间存在完全的多重共线性时，模型参数无法估计",
+    "options": [],
+    "answer": "true",
+    "explanation": ""
+  },
+  {
+    "id": 136,
+    "type": "judge",
+    "question": "如果存在异方差性，普通最小二乘法（OLS）估计量是有偏的且非有效",
+    "options": [],
+    "answer": "false",
+    "explanation": ""
+  },
+  {
+    "id": 137,
+    "type": "judge",
+    "question": "当模型存在自相关时，OLS 估计量仍然是无偏的，但不再具有最小方差性",
+    "options": [],
+    "answer": "true",
+    "explanation": ""
+  },
+  {
+    "id": 138,
+    "type": "judge",
+    "question": "根据怀特检验，如果检验统计量显著，则说明模型中不存在异方差",
+    "options": [],
+    "answer": "false",
+    "explanation": ""
+  },
+  {
+    "id": 139,
+    "type": "judge",
+    "question": "当模型存在多重共线性时，会使得参数估计量的方差增大，从而降低 t 检验的效力",
+    "options": [],
+    "answer": "true",
+    "explanation": ""
+  },
+  {
+    "id": 140,
+    "type": "judge",
+    "question": "估计量本质上是一个随机变量，因为它依赖于随机抽取的样本",
+    "options": [],
+    "answer": "true",
+    "explanation": ""
+  },
+  {
+    "id": 141,
+    "type": "judge",
+    "question": "外生性检验只能在过度识别条件下做",
+    "options": [],
+    "answer": "true",
+    "explanation": ""
+  },
+  {
+    "id": 142,
+    "type": "judge",
+    "question": "样本点和样本线的垂直距离可以用残差表示",
+    "options": [],
+    "answer": "true",
+    "explanation": ""
+  },
+  {
+    "id": 143,
+    "type": "judge",
+    "question": "在恰好识别的情况下，无法检验工具变量的外生性",
+    "options": [],
+    "answer": "true",
+    "explanation": ""
+  },
+  {
+    "id": 144,
+    "type": "judge",
+    "question": "无自相关是指扰动项的方差全不为0",
+    "options": [],
+    "answer": "false",
+    "explanation": ""
+  },
+  {
+    "id": 145,
+    "type": "judge",
+    "question": "在仅存在自相关的情况下，OLS估计量依然无偏且一致",
+    "options": [],
+    "answer": "true",
+    "explanation": ""
+  },
+  {
+    "id": 146,
+    "type": "judge",
+    "question": "研究因果关系最好的的方法是随机实验",
+    "options": [],
+    "answer": "true",
+    "explanation": ""
+  },
+  {
+    "id": 147,
+    "type": "judge",
+    "question": "OLS+稳健标准误是处理异方差最常见的办法。",
+    "options": [],
+    "answer": "true",
+    "explanation": ""
+  },
+  {
+    "id": 148,
+    "type": "judge",
+    "question": "如果存在异方差，t检验失效。",
+    "options": [],
+    "answer": "false",
+    "explanation": ""
+  },
+  {
+    "id": 149,
+    "type": "judge",
+    "question": "样本量n与估计量的方差成反比。",
+    "options": [],
+    "answer": "true",
+    "explanation": ""
+  },
+  {
+    "id": 150,
+    "type": "multichoice",
+    "question": "满足古典假定条件下，OLS估计量具有的性质有",
+    "options": [
+      "线性",
+      "无偏",
+      "有效性",
+      "一致性"
+    ],
+    "answer": "ABCD",
+    "explanation": ""
+  },
+  {
+    "id": 151,
+    "type": "multichoice",
+    "question": "下列关于的说法，正确的是",
+    "options": [
+      "小概率的标准",
+      "显著性水平",
+      "犯第Ⅰ类错误的概率",
+      "是与t分布的临界值tα/2(n-k)对应的概率"
+    ],
+    "answer": "ABCD",
+    "explanation": ""
+  },
+  {
+    "id": 152,
+    "type": "multichoice",
+    "question": "下列关于P值的说法，正确的是",
+    "options": [
+      "P值是给定样本观测值下拒绝原假设的最低显著性水平",
+      "拒绝原假设的最低显著性水平",
+      "犯第Ⅰ类错误的实际概率",
+      "P值越小，越能拒绝原假设"
+    ],
+    "answer": "ABCD",
+    "explanation": ""
+  },
+  {
+    "id": 153,
+    "type": "multichoice",
+    "question": "关于参数估计量的方差的说法正确的有",
+    "options": [
+      "异方差导致估计量方差变大",
+      "自相关导致估计量方差变大",
+      "多重共线导致估计量方差变大",
+      "内生性导致估计量方差变大"
+    ],
+    "answer": "ABCD",
+    "explanation": ""
+  },
+  {
+    "id": 154,
+    "type": "multichoice",
+    "question": "表明存在严重的多重共线的选项有",
+    "options": [
+      "VIF≥10",
+      "VIF≥10",
+      "CN＞1000",
+      "条件指数大于30"
+    ],
+    "answer": "ABCD",
+    "explanation": ""
+  },
+  {
+    "id": 155,
+    "type": "multichoice",
+    "question": "在经典线性模型假定中，有哪些不相关?",
+    "options": [
+      "解释变量之间不存在完全的线性相关",
+      "解释变量与扰动项之间不相关",
+      "扰动项之间不相关",
+      "Y与X不相关（不选）"
+    ],
+    "answer": "ABC",
+    "explanation": ""
+  },
+  {
+    "id": 156,
+    "type": "multichoice",
+    "question": "产生内生性的主要原因有",
+    "options": [
+      "双向因果",
+      "遗漏变量",
+      "测量误差",
+      "同期相关（不选）"
+    ],
+    "answer": "ABC",
+    "explanation": ""
+  },
+  {
+    "id": 157,
+    "type": "multichoice",
+    "question": "下列哪些选项导致OLS估计量的方差会变大?",
+    "options": [
+      "异方差",
+      "自相关",
+      "多重共线",
+      "内生性（不选）"
+    ],
+    "answer": "ABC",
+    "explanation": ""
+  },
+  {
+    "id": 158,
+    "type": "multichoice",
+    "question": "可决系数等于",
+    "options": [
+      "ESS/TSS",
+      "RSS/TSS（不选）",
+      "1-RSS/TSS",
+      "ESS/(ESS+RSS)"
+    ],
+    "answer": "ACD",
+    "explanation": ""
+  },
+  {
+    "id": 159,
+    "type": "multichoice",
+    "question": "一阶自相关系数的估计可以采取那些方法?",
+    "options": [
+      "1－DW/2",
+      "杜宾两步法",
+      "CO法（科克伦-奥克特法）",
+      "PW法（不选）"
+    ],
+    "answer": "ABC",
+    "explanation": ""
+  },
+  {
+    "id": 160,
+    "type": "choice",
+    "question": "如果模型的扰动项与解释变量同期相关，下列说法正确的是",
+    "options": [
+      "OLS估计量仍然是无偏估计量",
+      "OLS估计量仍然是一致估计量",
+      "OLS估计量是有偏但一致的估计量",
+      "OLS估计量是有偏且不一致的估计量"
+    ],
+    "answer": "D",
+    "explanation": ""
+  },
+  {
+    "id": 161,
+    "type": "multichoice",
+    "question": "模型出现内生解释变量，应采用的估计方法是",
+    "options": [
+      "加权最小二乘法",
+      "广义最小二乘法",
+      "工具变量法",
+      "二阶段最小二乘法"
+    ],
+    "answer": "CD",
+    "explanation": ""
+  },
+  {
+    "id": 162,
+    "type": "choice",
+    "question": "模型扰动项存在异方差，应采用的估计方法是",
+    "options": [
+      "加权最小二乘法",
+      "广义差分法",
+      "工具变量法",
+      "二阶段最小二乘法"
+    ],
+    "answer": "A",
+    "explanation": ""
+  },
+  {
+    "id": 163,
+    "type": "choice",
+    "question": "模型扰动项存在自相关，应采用的估计方法是",
+    "options": [
+      "加权最小二乘法",
+      "广义差分法",
+      "工具变量法",
+      "二阶段最小二乘法"
+    ],
+    "answer": "B",
+    "explanation": ""
+  },
+  {
+    "id": 164,
+    "type": "choice",
+    "question": "模型扰动项存在自相关和异方差，应采用的估计方法是",
+    "options": [
+      "加权最小二乘法",
+      "广义差分法",
+      "工具变量法",
+      "广义最小二乘法"
+    ],
+    "answer": "D",
+    "explanation": ""
+  },
+  {
+    "id": 165,
+    "type": "choice",
+    "question": "当扰动项存在自相关时，影响OLS估计量的",
+    "options": [
+      "无偏性",
+      "有效性",
+      "一致性",
+      "线性性"
+    ],
+    "answer": "B",
+    "explanation": ""
+  },
+  {
+    "id": 166,
+    "type": "choice",
+    "question": "当扰动项存在异方差时，影响OLS估计量的",
+    "options": [
+      "无偏性",
+      "有效性",
+      "一致性",
+      "线性性"
+    ],
+    "answer": "B",
+    "explanation": ""
+  },
+  {
+    "id": 167,
+    "type": "multichoice",
+    "question": "当扰动项与解释变量相关时，影响OLS估计量的",
+    "options": [
+      "无偏性",
+      "有效性",
+      "一致性",
+      "线性性（不选）"
+    ],
+    "answer": "AC",
+    "explanation": ""
+  },
+  {
+    "id": 168,
+    "type": "multichoice",
+    "question": "当存在多重共线性时，不影响OLS估计量的",
+    "options": [
+      "无偏性",
+      "有效性",
+      "一致性",
+      "线性性"
+    ],
+    "answer": "ABCD",
+    "explanation": ""
+  },
+  {
+    "id": 169,
+    "type": "choice",
+    "question": "双对数模型中，参数的含义是",
+    "options": [
+      "Y关于X的增长率",
+      "Y关于X的发展速度",
+      "Y关于X的弹性",
+      "Y关于X的边际变化"
+    ],
+    "answer": "C",
+    "explanation": ""
+  },
+  {
+    "id": 170,
+    "type": "multichoice",
+    "question": "回归模型中具有异方差性时，仍用OLS估计模型，则以下说法正确的是",
+    "options": [
+      "参数估计值是无偏非有效的",
+      "参数估计量仍具有最小方差性（不选）",
+      "t检验失效",
+      "参数估计量是有偏的（不选）"
+    ],
+    "answer": "AC",
+    "explanation": ""
+  },
+  {
+    "id": 171,
+    "type": "choice",
+    "question": "一元线性回归分析中的回归平方和ESS的自由度是",
+    "options": [
+      "n",
+      "n-1",
+      "n-k",
+      "1"
+    ],
+    "answer": "D",
+    "explanation": ""
+  },
+  {
+    "id": 172,
+    "type": "choice",
+    "question": "已知样本回归模型残差的一阶自相关系数接近于1，则DW统计量近似等于",
+    "options": [
+      "0",
+      "1",
+      "2",
+      "4"
+    ],
+    "answer": "A",
+    "explanation": ""
+  },
+  {
+    "id": 173,
+    "type": "choice",
+    "question": "以下选项中，正确地表达了序列相关的是",
+    "options": [
+      "Cov(ui, uj) ≠ 0，i ≠ j",
+      "Var(ui) ≠ σ²",
+      "Cov(Xi, ui) ≠ 0",
+      "Cov(Xi, Xj) ≠ 0"
+    ],
+    "answer": "A",
+    "explanation": ""
+  },
+  {
+    "id": 174,
+    "type": "choice",
+    "question": "在一元线性回归模型中，样本回归方程可表示为",
+    "options": [
+      "Yi = β₀ + β₁Xi",
+      "E(Y|Xi) = β₀ + β₁Xi",
+      "Ŷi = β̂₀ + β̂₁Xi",
+      "Yi = β̂₀ + β̂₁Xi + ei"
+    ],
+    "answer": "C",
+    "explanation": ""
+  },
+  {
+    "id": 175,
+    "type": "choice",
+    "question": "设为随机误差项，则一阶线性自相关是指",
+    "options": [
+      "Corr(ut, ut-1) ≠ 0",
+      "Cov(ut, ut-1) ≠ 0",
+      "ut = ρut-1 + εt",
+      "E(ut ut-1) = 0"
+    ],
+    "answer": "B",
+    "explanation": ""
+  },
+  {
+    "id": 176,
+    "type": "choice",
+    "question": "用于检验序列相关的DW统计量的取值范围是",
+    "options": [
+      "[-1,1]",
+      "[0,1]",
+      "[0,2]",
+      "[0,4]"
+    ],
+    "answer": "D",
+    "explanation": ""
+  },
+  {
+    "id": 177,
+    "type": "choice",
+    "question": "在具体运用加权最小二乘法时，如果变换的结果是Y/σi = β₁(1/σi) + β₂(Xi/σi) + ui/σi，则权数是",
+    "options": [
+      "1/Xi",
+      "1/σi",
+      "1/σi²",
+      "σi"
+    ],
+    "answer": "A",
+    "explanation": ""
+  },
+  {
+    "id": 178,
+    "type": "choice",
+    "question": "如果回归模型中解释变量之间存在完全的多重共线性，则最小二乘估计量的值为",
+    "options": [
+      "不确定，方差无限大",
+      "确定，方差无限大",
+      "不确定，方差最小",
+      "确定，方差最小"
+    ],
+    "answer": "A",
+    "explanation": ""
+  },
+  {
+    "id": 179,
+    "type": "multichoice",
+    "question": "对于二元样本回归模型，下列各式成立的有",
+    "options": [
+      "∑ei=0",
+      "∑eiXi=0",
+      "∑eiŶi=0",
+      "∑eiYi=0(不选)"
+    ],
+    "answer": "ABC",
+    "explanation": ""
+  },
+  {
+    "id": 180,
+    "type": "multichoice",
+    "question": "计量经济学是以下哪些学科相结合的综合性学科",
+    "options": [
+      "统计学",
+      "经济学",
+      "经济统计学(不选)",
+      "数学"
+    ],
+    "answer": "ABD",
+    "explanation": ""
+  },
+  {
+    "id": 181,
+    "type": "multichoice",
+    "question": "自相关对回归参数的估计的影响",
+    "options": [
+      "参数估计量方差变大",
+      "t检验失效",
+      "预测失效",
+      "F检验失效"
+    ],
+    "answer": "ABCD",
+    "explanation": ""
+  },
+  {
+    "id": 182,
+    "type": "multichoice",
+    "question": "异方差对回归参数的估计的影响",
+    "options": [
+      "参数估计量方差变大",
+      "t检验失效",
+      "预测失效",
+      "F检验失效"
+    ],
+    "answer": "ABCD",
+    "explanation": ""
+  },
+  {
+    "id": 183,
+    "type": "multichoice",
+    "question": "内生性是计量经济学面临的最大问题的原因",
+    "options": [
+      "内生性使OLS估计量不一致",
+      "内生性问题普遍存在",
+      "很难完全解决",
+      "有很多解决内生性的方法"
+    ],
+    "answer": "ABC",
+    "explanation": ""
+  },
+  {
+    "id": 184,
+    "type": "choice",
+    "question": "在总体回归直线E(Y|X)=β₀+β₁X中，β₁表示",
+    "options": [
+      "当X增加一个单位时，Y增加β₁个单位",
+      "当X增加一个单位时，Y平均增加β₁个单位",
+      "当Y增加一个单位时，X增加β₁个单位",
+      "当Y增加一个单位时，X平均增加β₁个单位"
+    ],
+    "answer": "B",
+    "explanation": ""
+  },
+  {
+    "id": 185,
+    "type": "choice",
+    "question": "对回归模型进行检验时，通常假定ui服从",
+    "options": [
+      "N(0,1)",
+      "t(n-2)",
+      "N(0,σ²)",
+      "t(n)"
+    ],
+    "answer": "C",
+    "explanation": ""
+  },
+  {
+    "id": 186,
+    "type": "choice",
+    "question": "以Y表示实际观测值，Ŷ表示回归估计值，则普通最小二乘法估计参数的准则是使",
+    "options": [
+      "∑(Yi-Ȳ)²最小",
+      "∑(Ŷi-Ȳ)²最小",
+      "∑(Yi-Ŷi)最小",
+      "∑(Yi-Ŷi)²最小"
+    ],
+    "answer": "D",
+    "explanation": ""
+  },
+  {
+    "id": 187,
+    "type": "choice",
+    "question": "产生异方差最主要的原因是",
+    "options": [
+      "模型误设引起的异方差",
+      "个体的异质性",
+      "数据本身属性引起的异方差",
+      "时间长度"
+    ],
+    "answer": "B",
+    "explanation": ""
+  },
+  {
+    "id": 188,
+    "type": "choice",
+    "question": "以下估计的方法中，最精确的是",
+    "options": [
+      "1-DW/2",
+      "杜宾两步法",
+      "CO法（科克伦-奥克特法）",
+      "PW法"
+    ],
+    "answer": "C",
+    "explanation": ""
+  },
+  {
+    "id": 189,
+    "type": "choice",
+    "question": "多个解释变量间的线性相关程度，用（ ）度量",
+    "options": [
+      "简单线性相关系数",
+      "解释变量间的协方差",
+      "辅助回归的可决系数",
+      "解释变量的方差"
+    ],
+    "answer": "C",
+    "explanation": ""
+  },
+  {
+    "id": 190,
+    "type": "multichoice",
+    "question": "自相关的检验方法有",
+    "options": [
+      "图示法",
+      "DW检验",
+      "BG检验",
+      "BP检验（不选）"
+    ],
+    "answer": "ABC",
+    "explanation": ""
+  },
+  {
+    "id": 191,
+    "type": "multichoice",
+    "question": "OLS的正交性包括",
+    "options": [
+      "残差向量与常数向量正交",
+      "残差向量与解释向量正交",
+      "残差向量与拟合值向量正交",
+      "以上都是"
+    ],
+    "answer": "D",
+    "explanation": ""
+  },
+  {
+    "id": 192,
+    "type": "multichoice",
+    "question": "处理异方差的方法有",
+    "options": [
+      "OLS+稳健标准误",
+      "FWLS（加权最小二乘法）",
+      "FWLS+稳健标准误",
+      "取对数"
+    ],
+    "answer": "ABCD",
+    "explanation": ""
+  },
+  {
+    "id": 193,
+    "type": "choice",
+    "question": "内生性问题的主要后果是",
+    "options": [
+      "参数估计无偏但效率低",
+      "参数估计有偏且不一致",
+      "误差项出现异方差",
+      "解释变量多重共线性"
+    ],
+    "answer": "B",
+    "explanation": ""
+  },
+  {
+    "id": 194,
+    "type": "choice",
+    "question": "Durbin-Watson（DW）检验主要用于检测",
+    "options": [
+      "异方差",
+      "自相关",
+      "多重共线性",
+      "内生性"
+    ],
+    "answer": "B",
+    "explanation": ""
+  },
+  {
+    "id": 195,
+    "type": "choice",
+    "question": "多重共线性的主要影响是",
+    "options": [
+      "参数估计值显著为零",
+      "参数估计方差增大，显著性检验失效",
+      "误差项方差变大",
+      "模型拟合优度降低"
+    ],
+    "answer": "B",
+    "explanation": ""
+  },
+  {
+    "id": 196,
+    "type": "multichoice",
+    "question": "面板数据的主要优势是",
+    "options": [
+      "缓解遗漏变量问题",
+      "同时分析个体异质性和动态变化",
+      "无需处理内生性（不选）",
+      "样本量大使估计更精确"
+    ],
+    "answer": "ABD",
+    "explanation": ""
+  },
+  {
+    "id": 197,
+    "type": "choice",
+    "question": "虚拟变量的主要作用是",
+    "options": [
+      "表示连续变量的分段效应",
+      "量化定性因素（如性别、政策）的影响",
+      "消除多重共线性",
+      "处理时间序列的季节性"
+    ],
+    "answer": "B",
+    "explanation": ""
+  },
+  {
+    "id": 198,
+    "type": "choice",
+    "question": "个体固定效应模型适用于",
+    "options": [
+      "个体效应与解释变量不相关",
+      "个体效应与解释变量相关",
+      "仅包含时间效应的场景",
+      "截面数据回归"
+    ],
+    "answer": "B",
+    "explanation": ""
+  },
+  {
+    "id": 199,
+    "type": "multichoice",
+    "question": "应对遗漏变量问题方法有",
+    "options": [
+      "增加控制变量",
+      "工具变量法",
+      "面板数据模型",
+      "随机实验"
+    ],
+    "answer": "ABCD",
+    "explanation": ""
+  },
+  {
+    "id": 200,
+    "type": "multichoice",
+    "question": "多重共线性的后果包括",
+    "options": [
+      "参数估计值方差增大",
+      "t检验显著性降低",
+      "模型拟合优度R²下降（不选）",
+      "VIF值大于10（不选）"
+    ],
+    "answer": "AB",
+    "explanation": ""
+  },
+  {
+    "id": 201,
+    "type": "multichoice",
+    "question": "工具变量法的三大检验是",
+    "options": [
+      "相关性检验",
+      "外生性检验",
+      "内生性检验",
+      "无关性检验（不选）"
+    ],
+    "answer": "ABC",
+    "explanation": ""
+  },
+  {
+    "id": 202,
+    "type": "choice",
+    "question": "工具变量法的三大检验应先做哪一个检验",
+    "options": [
+      "相关性检验",
+      "外生性检验",
+      "内生性检验",
+      "无关性检验"
+    ],
+    "answer": "A",
+    "explanation": ""
+  },
+  {
+    "id": 203,
+    "type": "choice",
+    "question": "弱工具变量检验与过度识别检验应先做哪一个",
+    "options": [
+      "弱工具变量检验",
+      "过度识别检验",
+      "豪斯曼检验",
+      "无关性检验"
+    ],
+    "answer": "A",
+    "explanation": ""
+  },
+  {
+    "id": 204,
+    "type": "multichoice",
+    "question": "个体固定效应模型的估计方法有",
+    "options": [
+      "组内估计量",
+      "固定效应估计量",
+      "LSDV",
+      "一阶差分法"
+    ],
+    "answer": "ABCD",
+    "explanation": ""
+  },
+  {
+    "id": 205,
+    "type": "multichoice",
+    "question": "异方差可以选择哪些方式处理",
+    "options": [
+      "OLS+稳健标准误",
+      "FWLS（加权最小二乘）",
+      "OLS+普通标准误（不选）",
+      "FWLS+稳健标准误"
+    ],
+    "answer": "ABD",
+    "explanation": ""
+  },
+  {
+    "id": 206,
+    "type": "multichoice",
+    "question": "白噪声的性质包括",
+    "options": [
+      "均值为0",
+      "方差为常数",
+      "协方差为0",
+      "服从正态分布"
+    ],
+    "answer": "ABC",
+    "explanation": ""
+  },
+  {
+    "id": 207,
+    "type": "multichoice",
+    "question": "解决或缓解遗漏变量偏差的方法主要有",
+    "options": [
+      "加入尽可能多的控制变量",
+      "随机实验与自然实验",
+      "工具变量法",
+      "使用面板数据"
+    ],
+    "answer": "ABCD",
+    "explanation": ""
+  },
+  {
+    "id": 208,
+    "type": "qa",
+    "question": "内生性问题产生的原因",
+    "options": [],
+    "answer": "内生性问题产生的主要原因包括：\n（1）遗漏变量：模型中遗漏了与被解释变量和相关解释变量都相关的变量，导致解释变量与扰动项相关。\n（2）双向因果关系：解释变量与被解释变量之间存在互为因果的关系。\n（3）测量误差：解释变量存在测量误差时，会导致内生性问题。",
+    "explanation": ""
+  },
+  {
+    "id": 209,
+    "type": "qa",
+    "question": "以一元线性回归模型系数β₁为例说明系数假设检验的步骤。",
+    "options": [],
+    "answer": "（1）对总体参数提出假设：H₀: β₁ = 0，H₁: β₁ ≠ 0\n（2）以原假设构造t统计量，并由样本计算其值：t = (β̂₁ - 0) / SE(β̂₁)\n（3）给定显著性水平α，查t分布表，得临界值 tα/2(n-2)\n（4）比较，判断：\n    若|t| > tα/2(n-2)，则拒绝H₀，接受H₁，认为β₁显著不为零；\n    若|t| < tα/2(n-2)，则不拒绝H₀，认为β₁不显著。",
+    "explanation": ""
+  },
+  {
+    "id": 210,
+    "type": "qa",
+    "question": "线性回归模型的经典假定",
+    "options": [],
+    "answer": "假定1：线性假定——总体回归函数对参数是线性的。\n假定2：严格外生性假定——随机误差项的条件均值为0，即E(ui|X) = 0。\n假定3：无完全多重共线性——解释变量之间不存在完全线性相关，数据矩阵X列满秩。\n假定4：同方差假定——Var(ui|X) = σ²（常数）。\n假定5：无自相关假定——Cov(ui, uj|X) = 0，i ≠ j。",
+    "explanation": ""
+  },
+  {
+    "id": 211,
+    "type": "qa",
+    "question": "扰动项严格外生性假定的5个推论",
+    "options": [],
+    "answer": "推论1：模型设定是正确的。\n推论2：随机误差项的无条件均值是零，即E(ui) = 0。\n推论3：随机误差项与解释变量正交，即E(X'u) = 0。\n推论4：随机误差项均值独立于解释变量。\n推论5：随机误差项与解释变量不相关，即Cov(Xi, ui) = 0。",
+    "explanation": ""
+  },
+  {
+    "id": 212,
+    "type": "qa",
+    "question": "OLS估计量的性质与线性回归模型的经典假定的关系",
+    "options": [],
+    "answer": "（1）无完全多重共线性保证X'X的逆矩阵存在，从而OLS估计量存在。\n（2）线性假定保证OLS估计量是关于被解释变量Y线性的。\n（3）严格外生性假定（E(ui|X)=0）保证OLS估计量的无偏性。\n（4）同方差与无自相关保证OLS估计量的有效性，即OLS估计量是所有线性无偏估计量中方差最小的。\n（5）严格外生性假定或其推论保证OLS估计量的一致性。",
+    "explanation": ""
+  },
+  {
+    "id": 213,
+    "type": "qa",
+    "question": "从四个方面表述P值的含义。",
+    "options": [],
+    "answer": "A. P值是给定样本观测值下能拒绝原假设的最低显著性水平。\nB. P值是拒绝原假设的最低显著性水平。\nC. P值是犯第Ⅰ类错误的实际概率。\nD. P值越小，越能拒绝原假设。",
+    "explanation": ""
+  },
+  {
+    "id": 214,
+    "type": "qa",
+    "question": "从四个方面表述显著性水平α的含义。",
+    "options": [],
+    "answer": "A. 显著性水平α是小概率的标准。\nB. α是显著性水平的度量。\nC. α是犯第Ⅰ类错误的概率。\nD. α决定了参数估计值与参数假设值之间的差异是否显著。",
+    "explanation": ""
+  },
+  {
+    "id": 215,
+    "type": "qa",
+    "question": "假设Yᵢ = βXᵢ + uᵢ，推导β的OLS估计量。",
+    "options": [],
+    "answer": "OLS估计量的推导：\n最小化残差平方和：min Σ(Yᵢ - βXᵢ)²\n对β求导并令导数为0：\n∂/∂β Σ(Yᵢ - βXᵢ)² = -2ΣXᵢ(Yᵢ - βXᵢ) = 0\nΣXᵢYᵢ - βΣXᵢ² = 0\nβ̂ = ΣXᵢYᵢ / ΣXᵢ²\n即β的OLS估计量为β̂ = ΣXᵢYᵢ / ΣXᵢ²。",
+    "explanation": ""
+  },
+  {
+    "id": 216,
+    "type": "qa",
+    "question": "证明：若E(ui|Xi) = 0，则β̂是一致估计量。",
+    "options": [],
+    "answer": "证明：\nβ̂ = ΣXᵢYᵢ / ΣXᵢ² = ΣXᵢ(βXᵢ + uᵢ) / ΣXᵢ² = β + ΣXᵢuᵢ / ΣXᵢ²\n两边取概率极限：\nplim(β̂) = β + plim(ΣXᵢuᵢ/n) / plim(ΣXᵢ²/n)\n由于E(ui|Xi) = 0，有Cov(Xᵢ, uᵢ) = 0，故plim(ΣXᵢuᵢ/n) = Cov(X, u) = 0\nplim(ΣXᵢ²/n) = Var(X) + [E(X)]² > 0\n所以 plim(β̂) = β，即β̂是一致估计量。",
+    "explanation": ""
+  },
+  {
+    "id": 217,
+    "type": "qa",
+    "question": "证明：OLS估计后残差与被解释变量的拟合值正交。",
+    "options": [],
+    "answer": "证明：\n残差向量 e = Y - Xβ̂ = Y - X(X'X)⁻¹X'Y = [I - X(X'X)⁻¹X']Y = MY\n拟合值向量 Ŷ = Xβ̂ = X(X'X)⁻¹X'Y = PY\n其中M和P为正交投影矩阵。\n需证明 e'Ŷ = 0：\ne'Ŷ = (MY)'(PY) = Y'M'PY = Y'MPY\n由于M和P正交（MP = 0），故e'Ŷ = 0。\n即残差向量与拟合值向量正交。",
+    "explanation": ""
+  },
+  {
+    "id": 218,
+    "type": "qa",
+    "question": "证明：残差与被解释变量的拟合值正交则两者不相关。",
+    "options": [],
+    "answer": "证明：\n由上一题已证 e'Ŷ = 0。\n又因OLS估计中Σeᵢ = 0（残差均值为0），故：\nCov(e, Ŷ) = E[(e - ē)(Ŷ - Ȳ̂)] = E(e·Ŷ) - E(e)·E(Ŷ)\n由于ē = 0，E(e) = 0\n所以 Cov(e, Ŷ) = E(e·Ŷ) = (e'Ŷ)/n = 0\n因此残差e与拟合值Ŷ不相关。",
+    "explanation": ""
+  },
+  {
+    "id": 219,
+    "type": "calc",
+    "question": "下面是我国1990-2003年GDP对M1回归的结果。\nGDP = α + β·M1 + u\nSe = (0.033) (0.109)\nt = (9.13) (23.0)\nR² = 0.98, n = 14\n\n（1）求出空白处的数值，填在括号内。\n（2）系数是否显著，给出理由。",
+    "options": [],
+    "answer": "参考解答：\n（1）第一个空（α的标准误）为0.033；第二个空（α的t统计量）为9.13。\n（2）根据t统计量，9.13和23.0都大于5%显著性水平下的临界值（t₀.₀₂₅(12)≈2.179），因此两个系数都是统计显著的。",
+    "explanation": ""
+  },
+  {
+    "id": 220,
+    "type": "calc",
+    "question": "为研究中国各地区入境旅游状况，建立了各省市旅游外汇收入（Y，百万美元）、旅行社职工人数（X₁，人）、国际旅游人数（X₂，万人次）的模型，用某年31个省市的截面数据估计结果如下：\nŶ = -151.0263 + 0.1179X₁ + 1.5452X₂\nt = (-3.066806) (6.652983) (3.378064)\nR² = 0.934331, F = 191.1894, n = 31\n\n（1）从经济意义上考察估计模型的合理性。\n（2）在5%显著性水平上，分别检验参数的显著性。\n（3）在5%显著性水平上，检验模型的整体显著性。",
+    "options": [],
+    "answer": "参考解答：\n（1）由模型估计结果可看出：旅行社职工人数和国际旅游人数均与旅游外汇收入正相关。平均说来，旅行社职工人数增加1人，旅游外汇收入将增加0.1179百万美元；国际旅游人数增加1万人次，旅游外汇收入增加1.5452百万美元。这与经济理论及经验符合，是合理的。\n（2）取α=0.05，查表得t₀.₀₂₅(28)≈2.048。因为3个参数t统计量的绝对值均大于2.048，说明经t检验3个参数均显著不为0。\n（3）取α=0.05，查表得F₀.₀₅(2,28)≈3.34，由于F=191.1894>3.34，说明回归方程整体显著。",
+    "explanation": ""
+  },
+  {
+    "id": 221,
+    "type": "calc",
+    "question": "根据某地区居民对农产品的消费y和居民收入x的样本资料，应用最小二乘法估计模型，估计结果如下：\nŷ = 27.9123 + 0.3524x\nSe = (1.8690) (0.0055)\nR² = 0.9966, DW = 0.6800, F = 4122.531, n = 16\n\n（1）在n=16，α=0.05的条件下，查D-W表得临界值分别为dL=1.106, dU=1.371，试判断模型中是否存在自相关；\n（2）如果模型存在自相关，求出相关系数ρ，并利用广义差分变换写出无自相关的广义差分模型。",
+    "options": [],
+    "answer": "解：\n（1）因为DW=0.68 < dL=1.106，所以模型中的随机误差项存在正的一阶自相关。\n（2）由DW≈2(1-ρ̂)，得ρ̂ = 1 - DW/2 = 1 - 0.68/2 = 0.66\n广义差分变换：\ny* = yt - 0.66·yt-1\nx* = xt - 0.66·xt-1\n无自相关的广义差分模型为：y* = β₀* + β₁x* + εt\n其中β₀* = β₀(1-ρ̂)。",
+    "explanation": ""
+  },
+  {
+    "id": 222,
+    "type": "calc",
+    "question": "先写出公式，然后计算下表中（1）、（2）、（3）、（4）与（5）处的值，小数点后保留4位。\n（注：此题需要具体数据表，此处为概念性题目）",
+    "options": [],
+    "answer": "参考答案：需根据具体数据表，运用回归分析相关公式计算：\n（1）回归系数估计值\n（2）标准误\n（3）t统计量\n（4）R²\n（5）F统计量\n小数点后保留4位小数。",
+    "explanation": ""
+  },
+  {
+    "id": 223,
+    "type": "case",
+    "question": "将美国各州的数据作为样本观测值，建立香烟需求模型：lnQ = β₀ + β₁lnY + β₂lnP + u，其中Q为人均香烟需求量，Y为各州居民人均收入，P为香烟销售价格。tax为香烟平均消费税，taxs为香烟特别消费税。\n\n（1）写出得到以下OLS回归结果的Stata命令及lnY系数的含义？\n（2）将tax、taxs作为lnP的工具变量进行2SLS回归的Stata命令？\n（3）写出下列过度识别检验的Stata命令并解释其结果\n（4）解释豪斯曼检验的结果\n（5）解释弱工具变量检验的结果",
+    "options": [],
+    "answer": "参考解答：\n（1）Stata命令：reg lnQ lnY lnP, r\n    lnY系数的含义：人均收入增加1%，香烟需求量增加0.34%。\n\n（2）Stata命令：ivregress 2sls lnQ lnY (lnP = tax taxs), r\n\n（3）过度识别检验命令：estat overid\n    P值为0.5608，大于0.05，故接受原假设，即认为两个工具变量（tax、taxs）是外生的。\n\n（4）豪斯曼检验结果：P值为0.0866，小于10%，因此在10%的显著性水平下可以认为香烟销售价格lnP为内生解释变量。\n\n（5）弱工具变量检验：第一阶段回归的F统计量为244.741，大于10的经验法则临界值，故认为不存在弱工具变量。",
+    "explanation": ""
+  },
+  {
+    "id": 224,
+    "type": "case",
+    "question": "教材：工具变量法的Stata实例。\n\n理解工具变量法在Stata中的实现步骤，包括：\n（1）内生性检验（豪斯曼检验）\n（2）弱工具变量检验\n（3）过度识别检验\n（4）2SLS估计及结果解释",
+    "options": [],
+    "answer": "参考解答：工具变量法的Stata操作步骤：\n1. 首先进行OLS回归作为基准：reg y x1 x2, r\n2. 豪斯曼内生性检验：先做第一阶段回归，然后用残差做辅助回归\n3. 使用ivregress 2sls命令进行2SLS估计\n4. 用estat firststage检查弱工具变量（F>10）\n5. 用estat overid进行过度识别检验（Sargan检验）\n6. 比较OLS和2SLS结果，分析内生性的影响",
+    "explanation": ""
+  },
+  {
+    "id": 225,
+    "type": "case",
+    "question": "教材：面板数据模型的Stata实例。\n\n理解面板数据模型在Stata中的实现步骤，包括：\n（1）混合OLS、固定效应模型和随机效应模型的估计\n（2）F检验、LM检验和豪斯曼检验\n（3）模型选择",
+    "options": [],
+    "answer": "参考解答：面板数据模型的Stata操作步骤：\n1. 设定面板结构：xtset id year\n2. 混合OLS：reg y x1 x2, vce(cluster id)\n3. 固定效应：xtreg y x1 x2, fe\n4. 随机效应：xtreg y x1 x2, re\n5. F检验（混合vs固定）：看F统计量\n6. LM检验（混合vs随机）：xttest0\n7. 豪斯曼检验（固定vs随机）：hausman fe re\n8. 根据检验结果选择合适的模型",
+    "explanation": ""
+  }
+];
+
+</script>
+
+<script>
+/* ================================================================
+   计量经济学刷题系统 - Application Logic
+   ================================================================ */
+
+// ===== CONSTANTS =====
+const STORAGE_KEY = 'econ_practice_state';
+const TYPE_LABELS = {
+  term: '名词解释',
+  judge: '判断题',
+  choice: '单选题',
+  multichoice: '多选题',
+  qa: '问答题',
+  calc: '计算题',
+  case: '案例分析'
+};
+const TYPE_BADGES = {
+  term: 'badge-term',
+  judge: 'badge-judge',
+  choice: 'badge-choice',
+  multichoice: 'badge-multichoice',
+  qa: 'badge-qa',
+  calc: 'badge-calc',
+  case: 'badge-case'
+};
+const OBJECTIVE_TYPES = ['judge', 'choice', 'multichoice'];
+const SUBJECTIVE_TYPES = ['term', 'qa', 'calc', 'case'];
+
+// ===== STATE =====
+let state = {
+  mode: 'home',         // 'home' | 'sequential' | 'random' | 'wrong' | 'favorites'
+  questions: [],         // Current question list
+  currentIndex: 0,       // Current position in questions list
+  correctCount: 0,       // Correct answers in current session
+  answered: {},          // { qid: true/false/'seen' } for objective/subjective
+  userAnswers: {},       // { qid: 'true'|'false'|'A'|'BC'|... } stores what user picked
+  randomCount: 20,       // Default random count
+};
+
+// ===== PERSISTENCE =====
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const saved = JSON.parse(raw);
+      // Restore wrong answers and favorites
+      if (saved.wrongIds) wrongIds = new Set(saved.wrongIds);
+      if (saved.favoriteIds) favoriteIds = new Set(saved.favoriteIds);
+      if (saved.randomCount) state.randomCount = saved.randomCount;
+    }
+  } catch(e) { /* ignore */ }
+}
+
+function saveState() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      wrongIds: [...wrongIds],
+      favoriteIds: [...favoriteIds],
+      randomCount: state.randomCount
+    }));
+  } catch(e) { /* ignore */ }
+}
+
+let wrongIds = new Set();
+let favoriteIds = new Set();
+
+function addWrong(qid) {
+  if (wrongIds.has(qid)) return;
+  wrongIds.add(qid);
+  saveState();
+}
+
+function removeWrong(qid) {
+  wrongIds.delete(qid);
+  saveState();
+}
+
+function clearWrongs() {
+  wrongIds.clear();
+  saveState();
+}
+
+function toggleFavorite(qid) {
+  if (favoriteIds.has(qid)) {
+    favoriteIds.delete(qid);
+  } else {
+    favoriteIds.add(qid);
+  }
+  saveState();
+}
+
+// ===== HELPERS =====
+function getTypeLabel(type) { return TYPE_LABELS[type] || type; }
+function getTypeBadge(type) { return TYPE_BADGES[type] || ''; }
+function isObjective(type) { return OBJECTIVE_TYPES.includes(type); }
+function isSubjective(type) { return SUBJECTIVE_TYPES.includes(type); }
+
+function getQuestionById(qid) {
+  return QUESTION_BANK.find(q => q.id === qid);
+}
+
+// ===== RENDER =====
+const app = document.getElementById('app');
+const toast = document.getElementById('toast');
+
+function showToast(msg) {
+  toast.textContent = msg;
+  toast.classList.add('show');
+  clearTimeout(toast._timeout);
+  toast._timeout = setTimeout(() => toast.classList.remove('show'), 2000);
+}
+
+function render() {
+  switch (state.mode) {
+    case 'home': renderHome(); break;
+    case 'sequential':
+    case 'random':
+      renderPractice(); break;
+    case 'wrong': renderWrongList(); break;
+    case 'favorites': renderFavorites(); break;
+  }
+}
+
+// ===== HOME PAGE =====
+function renderHome() {
+  const totalQ = QUESTION_BANK.length;
+  const totalWrong = wrongIds.size;
+  const totalFav = favoriteIds.size;
+
+  // Calculate stats counts dynamically
+  const countTerm = QUESTION_BANK.filter(q => q.type === 'term').length;
+  const countJudge = QUESTION_BANK.filter(q => q.type === 'judge').length;
+  const countChoice = QUESTION_BANK.filter(q => q.type === 'choice' || q.type === 'multichoice').length;
+  const countQA = QUESTION_BANK.filter(q => q.type === 'qa').length;
+  const countCalcCase = QUESTION_BANK.filter(q => q.type === 'calc' || q.type === 'case').length;
+  const wrongCount = wrongIds.size;
+
+  app.innerHTML = `
+    <div class="card" style="text-align:center;">
+      <h2 style="font-size:1.2em;color:#1a3a5c;">欢迎使用计量经济学刷题系统</h2>
+      <p style="color:#888;font-size:0.9em;margin-top:6px;">题库共包含 <strong>${totalQ}</strong> 道题目，点击下方卡片开始练习</p>
+    </div>
+
+    <div class="home-grid">
+      <div class="home-card" onclick="startSequential()">
+        <span class="icon">📝</span>
+        <div class="title">顺序练习</div>
+        <div class="desc">按题库顺序逐题练习<br>覆盖全部 ${totalQ} 道题目</div>
+      </div>
+
+      <div class="home-card" onclick="showRandomSettings()">
+        <span class="icon">🎲</span>
+        <div class="title">随机练习</div>
+        <div class="desc">随机抽取题目练习<br>可自定义题目数量</div>
+      </div>
+
+      <div class="home-card" onclick="showWrongList()">
+        <span class="icon">📋</span>
+        <div class="title">错题集</div>
+        <div class="desc">自动记录做错的客观题<br>当前累计 <strong>${wrongCount}</strong> 道错题</div>
+      </div>
+
+      <div class="home-card" onclick="showFavorites()">
+        <span class="icon">⭐</span>
+        <div class="title">收藏题目</div>
+        <div class="desc">标记为重点的题目<br>当前收藏 <strong>${totalFav}</strong> 道</div>
+      </div>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-item clickable" onclick="startSequential()" title="点击开始顺序练习全部题目">
+        <div class="num">${totalQ}</div>
+        <div class="label">📦 总题数</div>
+      </div>
+      <div class="stat-item clickable" onclick="startTypePractice('term')" title="点击专项练习名词解释">
+        <div class="num">${countTerm}</div>
+        <div class="label">📖 名词解释</div>
+      </div>
+      <div class="stat-item clickable" onclick="startTypePractice('judge')" title="点击专项练习判断题">
+        <div class="num">${countJudge}</div>
+        <div class="label">✍️ 判断题</div>
+      </div>
+      <div class="stat-item clickable" onclick="startTypePractice('choice')" title="点击专项练习选择题">
+        <div class="num">${countChoice}</div>
+        <div class="label">📝 选择题</div>
+      </div>
+      <div class="stat-item clickable" onclick="startTypePractice('qa')" title="点击专项练习问答题">
+        <div class="num">${countQA}</div>
+        <div class="label">💬 问答题</div>
+      </div>
+      <div class="stat-item clickable" onclick="startTypePractice('calcCase')" title="点击专项练习计算/案例分析">
+        <div class="num">${countCalcCase}</div>
+        <div class="label">🔢 计算/案例</div>
+      </div>
+    </div>
+
+    <p style="text-align:center;color:#bbb;font-size:0.75em;margin-top:8px;">💡 点击上方题型小框可针对该题型专项训练</p>
+  `;
+}
+
+// ===== MODE SELECTION =====
+function startSequential() {
+  state.mode = 'sequential';
+  state.questions = QUESTION_BANK.map(q => q.id);
+  state.currentIndex = 0;
+  state.correctCount = 0;
+  state.answered = {};
+  state.userAnswers = {};
+  renderPractice();
+  window.scrollTo(0, 0);
+}
+
+// Start practice filtered by question type
+function startTypePractice(typeFilter) {
+  let filtered;
+  switch (typeFilter) {
+    case 'term':
+      filtered = QUESTION_BANK.filter(q => q.type === 'term');
+      break;
+    case 'judge':
+      filtered = QUESTION_BANK.filter(q => q.type === 'judge');
+      break;
+    case 'choice':
+      filtered = QUESTION_BANK.filter(q => q.type === 'choice' || q.type === 'multichoice');
+      break;
+    case 'qa':
+      filtered = QUESTION_BANK.filter(q => q.type === 'qa');
+      break;
+    case 'calcCase':
+      filtered = QUESTION_BANK.filter(q => q.type === 'calc' || q.type === 'case');
+      break;
+    default:
+      filtered = QUESTION_BANK;
+  }
+  if (filtered.length === 0) {
+    showToast('该题型暂无题目');
+    return;
+  }
+  state.mode = 'sequential';
+  state.questions = filtered.map(q => q.id);
+  state.currentIndex = 0;
+  state.correctCount = 0;
+  state.answered = {};
+  state.userAnswers = {};
+  renderPractice();
+  window.scrollTo(0, 0);
+}
+
+function showRandomSettings() {
+  app.innerHTML = `
+    <div class="card">
+      <button class="back-btn" onclick="goHome()">← 返回首页</button>
+      <h3 style="margin-top:16px;color:#1a3a5c;">🎲 随机练习设置</h3>
+      <div class="mode-settings">
+        <label for="randomCount">抽取题目数量：</label>
+        <input type="number" id="randomCount" value="${state.randomCount}" min="5" max="${QUESTION_BANK.length}" step="5">
+        <span style="font-size:0.8em;color:#999;">（5-${QUESTION_BANK.length}，建议20-50题）</span>
+      </div>
+      <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap;">
+        <button class="nav-btn primary" onclick="startRandom()">开始随机练习</button>
+        <button class="nav-btn" onclick="startRandomAll()">抽取全部题目（随机顺序）</button>
+      </div>
+    </div>
+  `;
+  const input = document.getElementById('randomCount');
+  input.addEventListener('change', () => {
+    state.randomCount = Math.max(5, Math.min(QUESTION_BANK.length, parseInt(input.value) || 20));
+    saveState();
+  });
+}
+
+function startRandom() {
+  const count = Math.min(state.randomCount, QUESTION_BANK.length);
+  const shuffled = [...QUESTION_BANK].sort(() => Math.random() - 0.5);
+  state.questions = shuffled.slice(0, count).map(q => q.id);
+  state.mode = 'random';
+  state.currentIndex = 0;
+  state.correctCount = 0;
+  state.answered = {};
+  state.userAnswers = {};
+  renderPractice();
+  window.scrollTo(0, 0);
+}
+
+function startRandomAll() {
+  const shuffled = [...QUESTION_BANK].sort(() => Math.random() - 0.5);
+  state.questions = shuffled.map(q => q.id);
+  state.mode = 'random';
+  state.currentIndex = 0;
+  state.correctCount = 0;
+  state.answered = {};
+  state.userAnswers = {};
+  renderPractice();
+  window.scrollTo(0, 0);
+}
+
+// ===== WRONG LIST =====
+function showWrongList() {
+  state.mode = 'wrong';
+  state.questions = [];
+  state.currentIndex = 0;
+  state.correctCount = 0;
+  state.answered = {};
+  state.userAnswers = {};
+  renderWrongList();
+  window.scrollTo(0, 0);
+}
+
+function renderWrongList() {
+  const wrongQs = [...wrongIds].map(id => getQuestionById(id)).filter(Boolean);
+
+  if (wrongQs.length === 0) {
+    app.innerHTML = `
+      <div class="card">
+        <button class="back-btn" onclick="goHome()">← 返回首页</button>
+        <div class="empty-state">
+          <span class="icon">🎉</span>
+          <p>暂无错题记录</p>
+          <p style="font-size:0.85em;">继续练习，做错的客观题会自动记录在这里</p>
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  // Determine if we're practicing or listing
+  if (state.currentIndex >= 0 && state.questions.length > 0) {
+    renderWrongPractice(wrongQs);
+    return;
+  }
+
+  let html = `
+    <div class="card">
+      <button class="back-btn" onclick="goHome()">← 返回首页</button>
+      <h3 style="margin-top:16px;color:#1a3a5c;">📋 错题集（${wrongQs.length} 题）</h3>
+      <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap;">
+        <button class="nav-btn primary" onclick="startWrongPractice()">逐题重做</button>
+        <button class="nav-btn danger" onclick="confirmClearWrongs()">清空错题</button>
+      </div>
+    </div>
+  `;
+
+  wrongQs.forEach((q, i) => {
+    html += `
+      <div class="card" style="cursor:pointer;" onclick="startWrongPracticeAt(${i})">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+          <span class="${getTypeBadge(q.type)} badge" style="flex-shrink:0;">${getTypeLabel(q.type)}</span>
+          <span style="font-size:0.85em;color:#999;">#${i+1}</span>
+        </div>
+        <div style="margin-top:8px;font-size:0.95em;line-height:1.6;">${q.question}</div>
+        ${q.options.length ? `<div style="margin-top:6px;font-size:0.8em;color:#999;">选项：${q.options.join('；')}</div>` : ''}
+        <div style="margin-top:6px;font-size:0.8em;color:#52c41a;">正确答案：${formatAnswer(q)}</div>
+      </div>
+    `;
+  });
+
+  app.innerHTML = html;
+}
+
+function startWrongPractice() {
+  const wrongQs = [...wrongIds].map(id => getQuestionById(id)).filter(Boolean);
+  state.questions = wrongQs.map(q => q.id);
+  state.currentIndex = 0;
+  state.correctCount = 0;
+  state.answered = {};
+  state.userAnswers = {};
+  renderWrongPractice(wrongQs);
+  window.scrollTo(0, 0);
+}
+
+function startWrongPracticeAt(idx) {
+  const wrongQs = [...wrongIds].map(id => getQuestionById(id)).filter(Boolean);
+  state.questions = wrongQs.map(q => q.id);
+  state.currentIndex = idx;
+  state.correctCount = 0;
+  state.answered = {};
+  state.userAnswers = {};
+  renderWrongPractice(wrongQs);
+  window.scrollTo(0, 0);
+}
+
+function renderWrongPractice(wrongQs) {
+  if (state.currentIndex >= state.questions.length) {
+    renderFinished();
+    return;
+  }
+
+  const qid = state.questions[state.currentIndex];
+  const q = getQuestionById(qid);
+  if (!q) { nextQuestion(); return; }
+
+  const total = state.questions.length;
+  const current = state.currentIndex + 1;
+  const isCorrectAnswered = state.answered[qid] === true;
+  const isWrongAnswered = state.answered[qid] === false;
+  const isAnswered = isCorrectAnswered || isWrongAnswered || state.answered[qid] === 'seen';
+
+  let html = `
+    <div style="margin-bottom:12px;">
+      <button class="back-btn" onclick="showWrongList()">← 返回错题列表</button>
+      <span style="margin-left:12px;font-size:0.85em;color:#ff4d4f;">错题重做模式</span>
+    </div>
+    <div class="top-bar">
+      <span class="info"><span class="${getTypeBadge(q.type)} badge">${getTypeLabel(q.type)}</span> <strong>${current}/${total}</strong></span>
+      <span class="info">正确：<strong>${state.correctCount}</strong> | 正确率：<strong>${current > 1 ? Math.round(state.correctCount/(current-1)*100) : 0}%</strong></span>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-bar"><div class="progress-fill" style="width:${(current/total)*100}%"></div></div>
+      <span class="progress-text">${current}/${total}</span>
+    </div>
+    <div class="q-card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+        <span class="q-type-tag ${getTypeBadge(q.type)}">${getTypeLabel(q.type)}</span>
+        <button class="star-btn ${favoriteIds.has(q.id) ? 'active' : 'inactive'}" onclick="event.stopPropagation();toggleFavorite(${q.id});renderWrongList();startWrongPracticeAt(${state.currentIndex})">★</button>
+      </div>
+      <div class="q-text">${q.question}</div>
+      ${renderQuestionBody(q, isAnswered)}
+    </div>
+    <div class="nav-bar">
+      <button class="nav-btn" ${state.currentIndex === 0 ? 'disabled' : ''} onclick="prevQuestion()">← 上一题</button>
+      <button class="nav-btn" onclick="goHome()">🏠 返回首页</button>
+      <button class="nav-btn primary" onclick="nextQuestion()">${state.currentIndex >= state.questions.length - 1 ? '完成练习' : '下一题 →'}</button>
+    </div>
+  `;
+  app.innerHTML = html;
+
+  if (isAnswered) {
+    showAnswerResult(q);
+  }
+
+  setupQuestionInteraction(q);
+}
+
+function confirmClearWrongs() {
+  if (confirm('确定要清空所有错题记录吗？此操作不可恢复。')) {
+    clearWrongs();
+    goHome();
+    showToast('错题已清空');
+  }
+}
+
+// ===== FAVORITES =====
+function showFavorites() {
+  state.mode = 'favorites';
+  state.questions = [];
+  state.currentIndex = 0;
+  state.correctCount = 0;
+  state.answered = {};
+  state.userAnswers = {};
+  renderFavorites();
+  window.scrollTo(0, 0);
+}
+
+function renderFavorites() {
+  const favQs = [...favoriteIds].map(id => getQuestionById(id)).filter(Boolean);
+
+  if (favQs.length === 0) {
+    app.innerHTML = `
+      <div class="card">
+        <button class="back-btn" onclick="goHome()">← 返回首页</button>
+        <div class="empty-state">
+          <span class="icon">⭐</span>
+          <p>暂无收藏题目</p>
+          <p style="font-size:0.85em;">在练习中点击星标按钮即可收藏题目</p>
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  // Check if we're in practice mode for favorites
+  if (state.questions.length > 0 && state.currentIndex >= 0 && state.currentIndex < state.questions.length) {
+    renderFavPractice(favQs);
+    return;
+  }
+
+  let html = `
+    <div class="card">
+      <button class="back-btn" onclick="goHome()">← 返回首页</button>
+      <h3 style="margin-top:16px;color:#1a3a5c;">⭐ 收藏题目（${favQs.length} 题）</h3>
+      <div style="margin-top:12px;">
+        <button class="nav-btn primary" onclick="startFavoritesPractice()">逐题复习</button>
+      </div>
+    </div>
+  `;
+
+  favQs.forEach((q, i) => {
+    html += `
+      <div class="card" style="cursor:pointer;" onclick="startFavoritesPracticeAt(${i})">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+          <span class="${getTypeBadge(q.type)} badge">${getTypeLabel(q.type)}</span>
+          <button class="star-btn active" onclick="event.stopPropagation();toggleFavorite(${q.id});showFavorites()">★</button>
+        </div>
+        <div style="margin-top:8px;font-size:0.95em;line-height:1.6;">${q.question}</div>
+        ${q.options.length ? `<div style="margin-top:6px;font-size:0.8em;color:#999;">选项：${q.options.join('；')}</div>` : ''}
+        <div style="margin-top:6px;font-size:0.8em;color:#52c41a;">正确答案：${formatAnswer(q)}</div>
+      </div>
+    `;
+  });
+
+  app.innerHTML = html;
+}
+
+function startFavoritesPractice() {
+  const favQs = [...favoriteIds].map(id => getQuestionById(id)).filter(Boolean);
+  state.questions = favQs.map(q => q.id);
+  state.mode = 'favorites';
+  state.currentIndex = 0;
+  state.correctCount = 0;
+  state.answered = {};
+  state.userAnswers = {};
+  renderFavPractice(favQs);
+  window.scrollTo(0, 0);
+}
+
+function startFavoritesPracticeAt(idx) {
+  const favQs = [...favoriteIds].map(id => getQuestionById(id)).filter(Boolean);
+  state.questions = favQs.map(q => q.id);
+  state.mode = 'favorites';
+  state.currentIndex = idx;
+  state.correctCount = 0;
+  state.answered = {};
+  state.userAnswers = {};
+  renderFavPractice(favQs);
+  window.scrollTo(0, 0);
+}
+
+function renderFavPractice(favQs) {
+  if (state.currentIndex >= state.questions.length) {
+    renderFinished();
+    return;
+  }
+
+  const qid = state.questions[state.currentIndex];
+  const q = getQuestionById(qid);
+  if (!q) { nextQuestion(); return; }
+
+  const total = state.questions.length;
+  const current = state.currentIndex + 1;
+  const isCorrectAnswered = state.answered[qid] === true;
+  const isWrongAnswered = state.answered[qid] === false;
+  const isAnswered = isCorrectAnswered || isWrongAnswered || state.answered[qid] === 'seen';
+
+  let html = `
+    <div style="margin-bottom:12px;">
+      <button class="back-btn" onclick="showFavorites()">← 返回收藏列表</button>
+      <span style="margin-left:12px;font-size:0.85em;color:#faad14;">⭐ 收藏复习模式</span>
+    </div>
+    <div class="top-bar">
+      <span class="info"><span class="${getTypeBadge(q.type)} badge">${getTypeLabel(q.type)}</span> <strong>${current}/${total}</strong></span>
+      <span class="info">正确：<strong>${state.correctCount}</strong></span>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-bar"><div class="progress-fill" style="width:${(current/total)*100}%"></div></div>
+      <span class="progress-text">${current}/${total}</span>
+    </div>
+    <div class="q-card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+        <span class="q-type-tag ${getTypeBadge(q.type)}">${getTypeLabel(q.type)}</span>
+        <button class="star-btn active" onclick="event.stopPropagation();removeFavInPractice(${q.id})">★</button>
+      </div>
+      <div class="q-text">${q.question}</div>
+      ${renderQuestionBody(q, isAnswered)}
+    </div>
+    <div class="nav-bar">
+      <button class="nav-btn" ${state.currentIndex === 0 ? 'disabled' : ''} onclick="prevQuestion()">← 上一题</button>
+      <button class="nav-btn" onclick="goHome()">🏠 返回首页</button>
+      <button class="nav-btn primary" onclick="nextQuestion()">${state.currentIndex >= state.questions.length - 1 ? '完成练习' : '下一题 →'}</button>
+    </div>
+  `;
+  app.innerHTML = html;
+
+  if (isAnswered) {
+    showAnswerResult(q);
+  }
+
+  setupQuestionInteraction(q);
+}
+
+// ===== PRACTICE =====
+function renderPractice() {
+  if (state.questions.length === 0) {
+    goHome();
+    return;
+  }
+
+  if (state.currentIndex >= state.questions.length) {
+    renderFinished();
+    return;
+  }
+
+  const qid = state.questions[state.currentIndex];
+  const q = getQuestionById(qid);
+  if (!q) { nextQuestion(); return; }
+
+  const total = state.questions.length;
+  const current = state.currentIndex + 1;
+  const isCorrectAnswered = state.answered[qid] === true;
+  const isWrongAnswered = state.answered[qid] === false;
+  const isAnswered = isCorrectAnswered || isWrongAnswered || state.answered[qid] === 'seen';
+
+  // Determine mode label, detect type-specific practice
+  let modeLabel = state.mode === 'random' ? '随机练习' : '顺序练习';
+  if (state.mode === 'sequential' && state.questions.length > 0) {
+    const firstQ = getQuestionById(state.questions[0]);
+    if (firstQ) {
+      const allSameType = state.questions.every(id => {
+        const q = getQuestionById(id);
+        return q && (q.type === firstQ.type ||
+          (firstQ.type === 'choice' && q.type === 'multichoice') ||
+          (firstQ.type === 'multichoice' && q.type === 'choice') ||
+          (firstQ.type === 'calc' && q.type === 'case') ||
+          (firstQ.type === 'case' && q.type === 'calc'));
+      });
+      if (allSameType) {
+        modeLabel = getTypeLabel(firstQ.type) + '专项练习';
+        if (firstQ.type === 'choice' || firstQ.type === 'multichoice') {
+          modeLabel = '选择题专项练习';
+        } else if (firstQ.type === 'calc' || firstQ.type === 'case') {
+          modeLabel = '计算/案例专项练习';
+        }
+      }
+    }
+  }
+
+  let html = `
+    <div style="margin-bottom:12px;">
+      <button class="back-btn" onclick="confirmExit()">← 退出练习</button>
+      <span style="margin-left:12px;font-size:0.85em;color:#999;">${modeLabel}</span>
+    </div>
+    <div class="top-bar">
+      <span class="info"><span class="${getTypeBadge(q.type)} badge">${getTypeLabel(q.type)}</span> <strong>${current}/${total}</strong></span>
+      <span class="info">正确：<strong>${state.correctCount}</strong> | 正确率：<strong>${getAccuracy()}%</strong></span>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-bar"><div class="progress-fill" style="width:${(current/total)*100}%"></div></div>
+      <span class="progress-text">${current}/${total}</span>
+    </div>
+    <div class="q-card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+        <span class="q-type-tag ${getTypeBadge(q.type)}">${getTypeLabel(q.type)}</span>
+        <button class="star-btn ${favoriteIds.has(q.id) ? 'active' : 'inactive'}" onclick="event.stopPropagation();toggleFavorite(${q.id});render();">★</button>
+      </div>
+      <div class="q-text">${q.question}</div>
+      ${renderQuestionBody(q, isAnswered)}
+    </div>
+    <div class="nav-bar">
+      <button class="nav-btn" ${state.currentIndex === 0 ? 'disabled' : ''} onclick="prevQuestion()">← 上一题</button>
+      <button class="nav-btn" onclick="jumpToQuestion()">🔍 跳转</button>
+      <button class="nav-btn primary" onclick="nextQuestion()">${state.currentIndex >= state.questions.length - 1 ? '完成练习' : '下一题 →'}</button>
+    </div>
+  `;
+  app.innerHTML = html;
+
+  if (isAnswered) {
+    showAnswerResult(q);
+  }
+
+  setupQuestionInteraction(q);
+}
+
+function getAccuracy() {
+  const answeredCount = Object.values(state.answered).filter(v => v === true || v === false).length;
+  if (answeredCount === 0) return 0;
+  return Math.round(state.correctCount / answeredCount * 100);
+}
+
+function formatAnswer(q) {
+  if (q.type === 'judge') {
+    return q.answer === 'true' ? '正确（√）' : '错误（×）';
+  }
+  if (q.type === 'choice' || q.type === 'multichoice') {
+    return q.answer;
+  }
+  return '（点击显示答案）';
+}
+
+function renderQuestionBody(q, isAnswered) {
+  if (q.type === 'judge') {
+    return `
+      <div class="judge-btns">
+        <button class="judge-btn" id="judge-true" ${isAnswered ? 'disabled' : ''}>✓ 正确</button>
+        <button class="judge-btn" id="judge-false" ${isAnswered ? 'disabled' : ''}>✗ 错误</button>
+      </div>
+      <div class="answer-box" id="answerBox">
+        <div class="answer-label" id="answerLabel"></div>
+        <div class="answer-content" id="answerContent"></div>
+      </div>
+    `;
+  }
+  if (q.type === 'choice') {
+    let opts = '';
+    q.options.forEach((opt, i) => {
+      const letter = String.fromCharCode(65 + i);
+      opts += `
+        <li>
+          <button class="option-btn" id="opt-${letter}" data-opt="${letter}" ${isAnswered ? 'disabled' : ''}>
+            <span class="opt-letter">${letter}</span>
+            <span>${opt}</span>
+          </button>
+        </li>
+      `;
+    });
+    return `
+      <ul class="options-list">${opts}</ul>
+      <div class="answer-box" id="answerBox">
+        <div class="answer-label" id="answerLabel"></div>
+        <div class="answer-content" id="answerContent"></div>
+      </div>
+    `;
+  }
+  if (q.type === 'multichoice') {
+    let opts = '';
+    q.options.forEach((opt, i) => {
+      const letter = String.fromCharCode(65 + i);
+      opts += `
+        <li>
+          <button class="option-btn" id="opt-${letter}" data-opt="${letter}" ${isAnswered ? 'disabled' : ''}>
+            <span class="opt-letter">${letter}</span>
+            <span>${opt}</span>
+          </button>
+        </li>
+      `;
+    });
+    return `
+      <ul class="options-list">${opts}</ul>
+      <button class="nav-btn primary" id="submitMulti" style="margin-top:12px;width:100%;" ${isAnswered ? 'disabled' : ''}>提交答案</button>
+      <div class="answer-box" id="answerBox">
+        <div class="answer-label" id="answerLabel"></div>
+        <div class="answer-content" id="answerContent"></div>
+      </div>
+    `;
+  }
+  // Subjective questions: term, qa, calc, case
+  return `
+    <button class="show-answer-btn" id="showAnswerBtn" onclick="revealSubjectiveAnswer()">📖 显示答案</button>
+    <div class="answer-box" id="answerBox" style="margin-top:16px;">
+      <div class="answer-label correct-label">参考答案：</div>
+      <div class="answer-content">${escapeHtml(q.answer)}</div>
+    </div>
+  `;
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML.replace(/\n/g, '<br>');
+}
+
+// ===== QUESTION INTERACTION =====
+function setupQuestionInteraction(q) {
+  if (q.type === 'judge') {
+    const btnTrue = document.getElementById('judge-true');
+    const btnFalse = document.getElementById('judge-false');
+    if (btnTrue && btnFalse) {
+      btnTrue.addEventListener('click', () => handleJudgeAnswer(q, 'true'));
+      btnFalse.addEventListener('click', () => handleJudgeAnswer(q, 'false'));
+    }
+  }
+
+  if (q.type === 'choice') {
+    q.options.forEach((_, i) => {
+      const letter = String.fromCharCode(65 + i);
+      const btn = document.getElementById(`opt-${letter}`);
+      if (btn) {
+        btn.addEventListener('click', () => handleChoiceAnswer(q, letter));
+      }
+    });
+  }
+
+  if (q.type === 'multichoice') {
+    const selected = new Set();
+
+    q.options.forEach((_, i) => {
+      const letter = String.fromCharCode(65 + i);
+      const btn = document.getElementById(`opt-${letter}`);
+      if (btn) {
+        btn.addEventListener('click', () => {
+          if (btn.classList.contains('selected')) {
+            btn.classList.remove('selected');
+            selected.delete(letter);
+          } else {
+            btn.classList.add('selected');
+            selected.add(letter);
+          }
+        });
+      }
+    });
+
+    const submitBtn = document.getElementById('submitMulti');
+    if (submitBtn) {
+      submitBtn.addEventListener('click', () => {
+        if (selected.size === 0) {
+          showToast('请至少选择一个选项');
+          return;
+        }
+        const userAnswer = [...selected].sort().join('');
+        handleChoiceAnswer(q, userAnswer);
+      });
+    }
+  }
+}
+
+function handleJudgeAnswer(q, userAnswer) {
+  if (state.answered[q.id] !== undefined) return; // Already answered
+
+  const isCorrect = q.answer === userAnswer;
+
+  // Store user's answer
+  state.userAnswers[q.id] = userAnswer;
+
+  // Disable buttons
+  const btnTrue = document.getElementById('judge-true');
+  const btnFalse = document.getElementById('judge-false');
+  if (btnTrue) btnTrue.disabled = true;
+  if (btnFalse) btnFalse.disabled = true;
+
+  // Highlight correct/wrong
+  if (isCorrect) {
+    if (userAnswer === 'true' && btnTrue) btnTrue.classList.add('correct');
+    if (userAnswer === 'false' && btnFalse) btnFalse.classList.add('correct');
+    state.correctCount++;
+    state.answered[q.id] = true;
+    // Remove from wrong if previously wrong
+    removeWrong(q.id);
+  } else {
+    if (userAnswer === 'true' && btnTrue) btnTrue.classList.add('wrong');
+    if (userAnswer === 'false' && btnFalse) btnFalse.classList.add('wrong');
+    // Highlight the correct one
+    if (q.answer === 'true' && btnTrue) btnTrue.classList.add('correct');
+    if (q.answer === 'false' && btnFalse) btnFalse.classList.add('correct');
+    state.answered[q.id] = false;
+    addWrong(q.id);
+  }
+
+  showJudgeResult(q, isCorrect);
+}
+
+function handleChoiceAnswer(q, userAnswer) {
+  if (state.answered[q.id] !== undefined) return; // Already answered
+
+  // Store user's answer
+  state.userAnswers[q.id] = userAnswer;
+
+  const isCorrect = q.answer === userAnswer;
+
+  // Disable all option buttons
+  q.options.forEach((_, i) => {
+    const letter = String.fromCharCode(65 + i);
+    const btn = document.getElementById(`opt-${letter}`);
+    if (btn) btn.disabled = true;
+  });
+
+  // For multi-choice, disable submit button
+  const submitBtn = document.getElementById('submitMulti');
+  if (submitBtn) submitBtn.disabled = true;
+
+  // Highlight each option
+  const userLetters = new Set(userAnswer.split(''));
+  const correctLetters = new Set(q.answer.split(''));
+
+  q.options.forEach((_, i) => {
+    const letter = String.fromCharCode(65 + i);
+    const btn = document.getElementById(`opt-${letter}`);
+    if (!btn) return;
+
+    if (correctLetters.has(letter) && userLetters.has(letter)) {
+      btn.classList.add('correct');
+    } else if (userLetters.has(letter) && !correctLetters.has(letter)) {
+      btn.classList.add('wrong');
+    } else if (correctLetters.has(letter)) {
+      btn.classList.add('correct');
+    }
+  });
+
+  if (isCorrect) {
+    state.correctCount++;
+    state.answered[q.id] = true;
+    removeWrong(q.id);
+  } else {
+    state.answered[q.id] = false;
+    addWrong(q.id);
+  }
+
+  showChoiceResult(q, isCorrect);
+}
+
+function showJudgeResult(q, isCorrect) {
+  const answerBox = document.getElementById('answerBox');
+  const answerLabel = document.getElementById('answerLabel');
+  const answerContent = document.getElementById('answerContent');
+
+  if (!answerBox || !answerLabel || !answerContent) return;
+
+  answerBox.classList.add('show');
+  if (isCorrect) {
+    answerBox.classList.remove('wrong-answer');
+    answerLabel.className = 'answer-label correct-label';
+    answerLabel.textContent = '✓ 回答正确！';
+  } else {
+    answerBox.classList.add('wrong-answer');
+    answerLabel.className = 'answer-label wrong-label';
+    answerLabel.textContent = '✗ 回答错误';
+  }
+
+  const correctStr = q.answer === 'true' ? '正确（√）' : '错误（×）';
+  const explain = q.explanation || '';
+  answerContent.textContent = `正确答案：${correctStr}${explain ? '\n解析：' + explain : ''}`;
+
+  // Re-render stats
+  updateStatsDisplay();
+}
+
+function showChoiceResult(q, isCorrect) {
+  const answerBox = document.getElementById('answerBox');
+  const answerLabel = document.getElementById('answerLabel');
+  const answerContent = document.getElementById('answerContent');
+
+  if (!answerBox || !answerLabel || !answerContent) return;
+
+  answerBox.classList.add('show');
+  if (isCorrect) {
+    answerBox.classList.remove('wrong-answer');
+    answerLabel.className = 'answer-label correct-label';
+    answerLabel.textContent = '✓ 回答正确！';
+  } else {
+    answerBox.classList.add('wrong-answer');
+    answerLabel.className = 'answer-label wrong-label';
+    answerLabel.textContent = '✗ 回答错误';
+  }
+
+  let correctDesc = q.answer;
+  if (q.type === 'choice') {
+    const idx = q.answer.charCodeAt(0) - 65;
+    correctDesc += `（${q.options[idx] || ''}）`;
+  } else if (q.type === 'multichoice') {
+    correctDesc += '（';
+    correctDesc += q.answer.split('').map(l => {
+      const idx = l.charCodeAt(0) - 65;
+      return l + '. ' + (q.options[idx] || '');
+    }).join('；');
+    correctDesc += '）';
+  }
+
+  const explain = q.explanation || '';
+  answerContent.textContent = `正确答案：${correctDesc}${explain ? '\n解析：' + explain : ''}`;
+
+  updateStatsDisplay();
+}
+
+function updateStatsDisplay() {
+  // Update the top bar stats - find the info spans and update them
+  const infoSpans = document.querySelectorAll('.top-bar .info strong');
+  if (infoSpans.length >= 2) {
+    infoSpans[1].textContent = state.correctCount;
+    if (infoSpans.length >= 3) {
+      infoSpans[2].textContent = getAccuracy() + '%';
+    }
+  }
+
+  // Update progress text if exists
+  const progressText = document.querySelector('.progress-text');
+  if (progressText) {
+    progressText.textContent = (state.currentIndex + 1) + '/' + state.questions.length;
+  }
+}
+
+function revealSubjectiveAnswer() {
+  const answerBox = document.getElementById('answerBox');
+  const showBtn = document.getElementById('showAnswerBtn');
+
+  if (answerBox) {
+    answerBox.classList.add('show');
+  }
+  if (showBtn) {
+    showBtn.style.display = 'none';
+  }
+
+  // Mark as seen
+  const qid = state.questions[state.currentIndex];
+  if (qid && state.answered[qid] === undefined) {
+    state.answered[qid] = 'seen';
+  }
+}
+
+function showAnswerResult(q) {
+  // For already answered questions, restore the UI state
+  if (q.type === 'judge') {
+    const btnTrue = document.getElementById('judge-true');
+    const btnFalse = document.getElementById('judge-false');
+    if (btnTrue) btnTrue.disabled = true;
+    if (btnFalse) btnFalse.disabled = true;
+
+    const userAnswer = state.userAnswers[q.id];
+    if (userAnswer) {
+      // Mark user's selection
+      if (userAnswer === 'true' && btnTrue) {
+        btnTrue.classList.add(q.answer === 'true' ? 'correct' : 'wrong');
+      }
+      if (userAnswer === 'false' && btnFalse) {
+        btnFalse.classList.add(q.answer === 'false' ? 'correct' : 'wrong');
+      }
+    }
+    // Always mark the correct answer
+    if (q.answer === 'true' && btnTrue && !btnTrue.classList.contains('correct')) btnTrue.classList.add('correct');
+    if (q.answer === 'false' && btnFalse && !btnFalse.classList.contains('correct')) btnFalse.classList.add('correct');
+
+    const answerBox = document.getElementById('answerBox');
+    const answerLabel = document.getElementById('answerLabel');
+    const answerContent = document.getElementById('answerContent');
+    if (answerBox && answerLabel && answerContent) {
+      answerBox.classList.add('show');
+      const isCorrect = state.answered[q.id] === true;
+      if (isCorrect) {
+        answerBox.classList.remove('wrong-answer');
+        answerLabel.className = 'answer-label correct-label';
+        answerLabel.textContent = '✓ 回答正确！';
+      } else {
+        answerBox.classList.add('wrong-answer');
+        answerLabel.className = 'answer-label wrong-label';
+        answerLabel.textContent = '✗ 回答错误';
+      }
+      const correctStr = q.answer === 'true' ? '正确（√）' : '错误（×）';
+      answerContent.textContent = `正确答案：${correctStr}`;
+    }
+  }
+
+  if (q.type === 'choice' || q.type === 'multichoice') {
+    const userAnswer = state.userAnswers[q.id] || '';
+    const correctLetters = new Set(q.answer.split(''));
+    const userLetters = new Set(userAnswer.split(''));
+
+    q.options.forEach((_, i) => {
+      const letter = String.fromCharCode(65 + i);
+      const btn = document.getElementById(`opt-${letter}`);
+      if (!btn) return;
+      btn.disabled = true;
+
+      // If user selected this option
+      if (userLetters.has(letter)) {
+        btn.classList.add(correctLetters.has(letter) ? 'correct' : 'wrong');
+        btn.classList.add('selected');
+      } else if (correctLetters.has(letter)) {
+        // Correct but not selected by user
+        btn.classList.add('correct');
+      }
+    });
+
+    if (document.getElementById('submitMulti')) {
+      document.getElementById('submitMulti').disabled = true;
+    }
+
+    const answerBox = document.getElementById('answerBox');
+    const answerLabel = document.getElementById('answerLabel');
+    const answerContent = document.getElementById('answerContent');
+    if (answerBox && answerLabel && answerContent) {
+      answerBox.classList.add('show');
+      const isCorrect = state.answered[q.id] === true;
+      const isSeen = state.answered[q.id] === 'seen';
+      if (isCorrect) {
+        answerBox.classList.remove('wrong-answer');
+        answerLabel.className = 'answer-label correct-label';
+        answerLabel.textContent = '✓ 回答正确！';
+      } else if (isSeen) {
+        answerBox.classList.remove('wrong-answer');
+        answerLabel.className = 'answer-label';
+        answerLabel.textContent = '正确答案：';
+      } else {
+        answerBox.classList.add('wrong-answer');
+        answerLabel.className = 'answer-label wrong-label';
+        answerLabel.textContent = '✗ 回答错误';
+      }
+      // Build descriptive answer
+      let answerDesc = q.answer;
+      if (q.options.length > 0) {
+        answerDesc += ' (';
+        answerDesc += q.answer.split('').map(l => {
+          const idx = l.charCodeAt(0) - 65;
+          return l + '. ' + (q.options[idx] || '');
+        }).join('；');
+        answerDesc += ')';
+      }
+      answerContent.textContent = `正确答案：${answerDesc}`;
+    }
+  }
+
+  if (isSubjective(q.type)) {
+    const answerBox = document.getElementById('answerBox');
+    const showBtn = document.getElementById('showAnswerBtn');
+    if (state.answered[q.id] === 'seen') {
+      if (answerBox) answerBox.classList.add('show');
+      if (showBtn) showBtn.style.display = 'none';
+    }
+  }
+}
+
+// ===== NAVIGATION =====
+function prevQuestion() {
+  if (state.currentIndex > 0) {
+    state.currentIndex--;
+    render();
+    window.scrollTo(0, 0);
+  }
+}
+
+function nextQuestion() {
+  if (state.currentIndex < state.questions.length - 1) {
+    state.currentIndex++;
+    render();
+    window.scrollTo(0, 0);
+  } else {
+    // Practice finished
+    state.currentIndex = state.questions.length;
+    renderFinished();
+    window.scrollTo(0, 0);
+  }
+}
+
+function jumpToQuestion() {
+  const target = prompt(`请输入要跳转的题号（1-${state.questions.length}）：`);
+  if (target === null) return;
+  const num = parseInt(target);
+  if (isNaN(num) || num < 1 || num > state.questions.length) {
+    showToast('请输入有效的题号');
+    return;
+  }
+  state.currentIndex = num - 1;
+  render();
+  window.scrollTo(0, 0);
+}
+
+function confirmExit() {
+  const answered = Object.values(state.answered).filter(v => v !== undefined).length;
+  if (answered > 0 && answered < state.questions.length) {
+    if (!confirm(`你已完成 ${answered}/${state.questions.length} 题，确定要退出吗？进度不会丢失，下次可以从头开始。`)) {
+      return;
+    }
+  }
+  goHome();
+}
+
+function removeFavInPractice(qid) {
+  toggleFavorite(qid);
+  // Remove this question from the current practice list
+  state.questions = state.questions.filter(id => id !== qid);
+  if (state.questions.length === 0) {
+    showToast('收藏已清空');
+    goHome();
+    return;
+  }
+  // Adjust index if it went past the end
+  if (state.currentIndex >= state.questions.length) {
+    state.currentIndex = Math.max(0, state.questions.length - 1);
+  }
+  render();
+  window.scrollTo(0, 0);
+}
+
+function goHome() {
+  state.mode = 'home';
+  state.questions = [];
+  state.currentIndex = 0;
+  state.correctCount = 0;
+  state.answered = {};
+  state.userAnswers = {};
+  render();
+  window.scrollTo(0, 0);
+}
+
+function renderFinished() {
+  const total = state.questions.length;
+  const objAnswered = Object.entries(state.answered).filter(([_, v]) => v === true || v === false).length;
+  const correct = state.correctCount;
+  const accuracy = objAnswered > 0 ? Math.round(correct / objAnswered * 100) : 0;
+
+  let modeLabel = '顺序练习';
+  if (state.mode === 'random') modeLabel = '随机练习';
+  if (state.mode === 'wrong') modeLabel = '错题重做';
+  if (state.mode === 'favorites') modeLabel = '收藏复习';
+
+  app.innerHTML = `
+    <div class="card" style="text-align:center;">
+      <div style="font-size:3em;margin-bottom:12px;">🎉</div>
+      <h2 style="color:#1a3a5c;">练习完成！</h2>
+      <p style="color:#888;margin-top:8px;">${modeLabel}</p>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-item">
+        <div class="num">${total}</div>
+        <div class="label">总题数</div>
+      </div>
+      <div class="stat-item">
+        <div class="num">${objAnswered}</div>
+        <div class="label">已答客观题</div>
+      </div>
+      <div class="stat-item">
+        <div class="num">${correct}</div>
+        <div class="label">正确数</div>
+      </div>
+      <div class="stat-item">
+        <div class="num">${accuracy}%</div>
+        <div class="label">正确率</div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:12px;margin-top:16px;flex-wrap:wrap;">
+      <button class="nav-btn primary" onclick="retryPractice()" style="flex:1;">🔄 重新练习</button>
+      <button class="nav-btn" onclick="goHome()" style="flex:1;">🏠 返回首页</button>
+    </div>
+
+    ${wrongIds.size > 0 ? `
+      <div class="card" style="margin-top:16px;text-align:center;">
+        <p style="color:#ff4d4f;">本次练习产生了 ${wrongIds.size} 道错题</p>
+        <button class="nav-btn primary" onclick="showWrongList()" style="margin-top:8px;">📋 查看错题集</button>
+      </div>
+    ` : ''}
+  `;
+}
+
+function retryPractice() {
+  state.currentIndex = 0;
+  state.correctCount = 0;
+  state.answered = {};
+  state.userAnswers = {};
+  render();
+  window.scrollTo(0, 0);
+}
+
+// ===== INIT =====
+loadState();
+render();
+</script>
+</body>
+</html>
